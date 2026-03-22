@@ -9,13 +9,16 @@ plugins {
 	id("application")
 	id("org.sonarqube") version "7.2.3.7755"
 	jacoco
+
 }
 
 group = "hexlet.code"
 version = "0.0.1-SNAPSHOT"
 
+val lombokVersion = "1.18.34"
+
 application {
-	mainClass = "hexlet.code.AppApplication"
+	mainClass = "hexlet.code.app.AppApplication"
 }
 
 
@@ -32,10 +35,32 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	//lombok
+	compileOnly("org.projectlombok:lombok:$lombokVersion")
+	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
+
+	testCompileOnly("org.projectlombok:lombok:$lombokVersion")
+	testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
+
+	runtimeOnly("com.h2database:h2")
+
+	runtimeOnly("org.postgresql:postgresql")
+
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+
+
 }
 
 tasks.check {
