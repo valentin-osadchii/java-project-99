@@ -20,7 +20,7 @@ jobs:
           distribution: 'zulu' # Alternative distribution options are available
 
       - name: Grant execute permission for gradlew
-        run: chmod +x app/gradlew  # <-- Исправлено здесь!
+        run: chmod +x gradlew
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
