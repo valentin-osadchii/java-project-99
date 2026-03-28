@@ -6,10 +6,8 @@ import hexlet.code.app.dto.UserUpdateDTO;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.service.UserService;
-import hexlet.code.app.util.UserUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,19 +29,16 @@ public class UsersController {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
-    private final UserUtils userUtils;
 
 
     public UsersController(UserRepository userRepository,
                            UserMapper userMapper,
                            PasswordEncoder passwordEncoder,
-                           UserService userService,
-                           UserUtils userUtils) {
+                           UserService userService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
-        this.userUtils = userUtils;
     }
 
 
@@ -70,9 +65,15 @@ public class UsersController {
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
                              @Valid @RequestBody UserUpdateDTO dto) {
-        var currentUser = userUtils.getCurrentUser();
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
+        var email = authentication.getName();
+        var currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("User not found: " + email));
         if (!currentUser.getId().equals(id)) {
-            throw new AccessDeniedException("You can only update your own profile");
+            throw new org.springframework.security.access.AccessDeniedException("You can only update your own profile");
         }
         return userService.updateUser(id, dto);
     }
@@ -81,9 +82,15 @@ public class UsersController {
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        var currentUser = userUtils.getCurrentUser();
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
+            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
+        }
+        var email = authentication.getName();
+        var currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("User not found: " + email));
         if (!currentUser.getId().equals(id)) {
-            throw new AccessDeniedException("You can only delete your own account");
+            throw new org.springframework.security.access.AccessDeniedException("You can only delete your own account");
         }
         userService.deleteUser(id);
     }
