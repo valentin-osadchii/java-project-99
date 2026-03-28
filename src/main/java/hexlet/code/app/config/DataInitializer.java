@@ -4,17 +4,17 @@ package hexlet.code.app.config;
 import hexlet.code.app.model.User;
 import hexlet.code.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-//import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 
 @Component
 @RequiredArgsConstructor
-//@Profile("dev")
 public class DataInitializer {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostConstruct
     public void init() {
@@ -23,7 +23,7 @@ public class DataInitializer {
             admin.setEmail("hexlet@example.com");
             admin.setFirstName("Admin");
             admin.setLastName("System");
-            admin.setPassword("qwerty");
+            admin.setPassword(passwordEncoder.encode("qwerty"));
 
             userRepository.save(admin);
             System.out.println("✅ Admin user created: hexlet@example.com");

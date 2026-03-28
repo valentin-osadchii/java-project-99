@@ -38,6 +38,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
 
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -49,6 +51,8 @@ dependencies {
 	// Additional test dependencies for MockMvc
 	testImplementation("org.springframework:spring-webmvc")
 	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+	testImplementation("org.springframework.security:spring-security-test")
+
 
 	//lombok
 	compileOnly("org.projectlombok:lombok:$lombokVersion")

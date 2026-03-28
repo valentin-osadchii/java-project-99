@@ -6,8 +6,10 @@ import hexlet.code.app.dto.UserUpdateDTO;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.service.UserService;
+import hexlet.code.app.util.UserUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,16 +31,19 @@ public class UsersController {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final UserUtils userUtils;
 
 
     public UsersController(UserRepository userRepository,
                            UserMapper userMapper,
                            PasswordEncoder passwordEncoder,
-                           UserService userService) {
+                           UserService userService,
+                           UserUtils userUtils) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.userService = userService;
+        this.userUtils = userUtils;
     }
 
 
@@ -65,6 +70,10 @@ public class UsersController {
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
                              @Valid @RequestBody UserUpdateDTO dto) {
+        var currentUser = userUtils.getCurrentUser();
+        if (!currentUser.getId().equals(id)) {
+            throw new AccessDeniedException("You can only update your own profile");
+        }
         return userService.updateUser(id, dto);
     }
 
@@ -72,6 +81,10 @@ public class UsersController {
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
+        var currentUser = userUtils.getCurrentUser();
+        if (!currentUser.getId().equals(id)) {
+            throw new AccessDeniedException("You can only delete your own account");
+        }
         userService.deleteUser(id);
     }
 

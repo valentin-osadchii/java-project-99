@@ -42,3 +42,4 @@ out/
 
 ### Qwen ###
 QWEN.md
+/src/main/resources/certs/private.pem
