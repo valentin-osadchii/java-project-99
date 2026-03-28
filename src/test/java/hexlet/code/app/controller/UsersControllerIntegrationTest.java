@@ -355,6 +355,34 @@ class UsersControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @DisplayName("PUT /api/users/{id} - should return 400 when email format is invalid")
+    void updateUserWhenInvalidEmailShouldReturnBadRequest() throws Exception {
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setEmail("invalid-email");
+
+        String requestBody = objectMapper.writeValueAsString(updateDTO);
+
+        mockMvc.perform(put("/api/users/" + savedUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /api/users/{id} - should return 400 when password is too short")
+    void updateUserWhenPasswordTooShortShouldReturnBadRequest() throws Exception {
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setPassword("ab");
+
+        String requestBody = objectMapper.writeValueAsString(updateDTO);
+
+        mockMvc.perform(put("/api/users/" + savedUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
     private User createUserAndSave(String email, String firstName, String lastName, String password) {
         User user = new User();
         user.setEmail(email);
