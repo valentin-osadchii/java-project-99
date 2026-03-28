@@ -2,13 +2,11 @@ package hexlet.code.app.controller;
 
 import hexlet.code.app.dto.UserCreateDTO;
 import hexlet.code.app.dto.UserDTO;
-
 import hexlet.code.app.dto.UserUpdateDTO;
-import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
-
 import hexlet.code.app.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -59,14 +57,14 @@ public class UsersController {
 
     @PostMapping(path = "")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDTO create(@RequestBody UserCreateDTO userData) {
+    public UserDTO create(@Valid @RequestBody UserCreateDTO userData) {
         return userService.createUser(userData);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
-                             @RequestBody UserUpdateDTO dto) {
+                             @Valid @RequestBody UserUpdateDTO dto) {
         return userService.updateUser(id, dto);
     }
 

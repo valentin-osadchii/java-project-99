@@ -29,15 +29,13 @@ public class UserService {
         return users.stream().map(userMapper::map).toList();
     }
 
-    public UserDTO getUser(long id){
-        UserDTO result = null;
+    public UserDTO getUser(long id) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
         return userMapper.map(user);
     }
 
-
-    public UserDTO createUser(UserCreateDTO userData){
+    public UserDTO createUser(UserCreateDTO userData) {
         var user = userMapper.map(userData);
         user.setPassword(passwordEncoder.encode(userData.getPassword()));
 
@@ -46,7 +44,7 @@ public class UserService {
         return userMapper.map(user);
     }
 
-    public UserDTO updateUser(long id, UserUpdateDTO userData){
+    public UserDTO updateUser(long id, UserUpdateDTO userData) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(""));
 
@@ -60,12 +58,10 @@ public class UserService {
         return userMapper.map(user);
     }
 
-    public void deleteUser(long id){
+    public void deleteUser(long id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Product with id " + id + " not found");
         }
         userRepository.deleteById(id);
     }
-
-
 }
