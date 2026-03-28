@@ -7,6 +7,7 @@ import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -48,8 +49,10 @@ public class UsersController {
 
     @GetMapping(path = "")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDTO> index() {
-        return userService.getAll();
+    public List<UserDTO> index(HttpServletResponse response) {
+        var users = userService.getAll();
+        response.setHeader("X-Total-Count", String.valueOf(users.size()));
+        return users;
     }
 
     @GetMapping(path = "/{id}")
