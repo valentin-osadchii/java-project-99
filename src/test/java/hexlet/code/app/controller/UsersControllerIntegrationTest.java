@@ -5,6 +5,7 @@ import hexlet.code.app.dto.UserCreateDTO;
 import hexlet.code.app.dto.UserUpdateDTO;
 import hexlet.code.app.model.User;
 import hexlet.code.app.repository.UserRepository;
+import hexlet.code.app.util.JWTUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,17 +51,24 @@ class UsersControllerIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JWTUtils jwtUtils;
+
     private MockMvc mockMvc;
     private User savedUser;
+    private String authToken;
 
     @LocalServerPort
     private Integer port;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
+                .build();
         userRepository.deleteAll();
         savedUser = createUserAndSave("john@example.com", "John", "Doe", "password123");
+        authToken = jwtUtils.generateToken("john@example.com");
     }
 
     @Test
@@ -68,7 +76,8 @@ class UsersControllerIntegrationTest {
     void getAllUsersWhenNoUsersShouldReturnEmptyList() throws Exception {
         userRepository.deleteAll();
 
-        mockMvc.perform(get("/api/users"))
+        mockMvc.perform(get("/api/users")
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -79,7 +88,8 @@ class UsersControllerIntegrationTest {
     void getAllUsersWhenUsersExistShouldReturnUserList() throws Exception {
         createUserAndSave("jane@example.com", "Jane", "Smith", "password456");
 
-        mockMvc.perform(get("/api/users"))
+        mockMvc.perform(get("/api/users")
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(2)))
@@ -92,7 +102,8 @@ class UsersControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/users/{id} - should return user by id")
     void getUserByIdWhenUserExistsShouldReturnUser() throws Exception {
-        mockMvc.perform(get("/api/users/" + savedUser.getId()))
+        mockMvc.perform(get("/api/users/" + savedUser.getId())
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(savedUser.getId().intValue())))
@@ -107,7 +118,8 @@ class UsersControllerIntegrationTest {
     void getUserByIdWhenUserNotFoundShouldReturn404() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(get("/api/users/" + nonExistentId))
+        mockMvc.perform(get("/api/users/" + nonExistentId)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNotFound());
     }
 
@@ -164,7 +176,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("updated@example.com")))
                 .andExpect(jsonPath("$.firstName", is("John")))
@@ -185,7 +198,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
         User updatedUser = userRepository.findById(savedUser.getId()).get();
@@ -205,7 +219,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("newemail@example.com")))
                 .andExpect(jsonPath("$.firstName", is("Updated")))
@@ -222,7 +237,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", is("changed@example.com")))
                 .andExpect(jsonPath("$.firstName", is("John")))
@@ -240,14 +256,16 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + nonExistentId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("DELETE /api/users/{id} - should delete user")
     void deleteUserWhenUserExistsShouldDeleteSuccessfully() throws Exception {
-        mockMvc.perform(delete("/api/users/" + savedUser.getId()))
+        mockMvc.perform(delete("/api/users/" + savedUser.getId())
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findById(savedUser.getId())).isEmpty();
@@ -258,7 +276,8 @@ class UsersControllerIntegrationTest {
     void deleteUserWhenUserNotFoundShouldReturn404() throws Exception {
         Long nonExistentId = 999L;
 
-        mockMvc.perform(delete("/api/users/" + nonExistentId))
+        mockMvc.perform(delete("/api/users/" + nonExistentId)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNotFound());
     }
 
@@ -267,7 +286,8 @@ class UsersControllerIntegrationTest {
     void deleteUserWhenMultipleUsersShouldDeleteOnlyTarget() throws Exception {
         User anotherUser = createUserAndSave("another@example.com", "Another", "User", "password789");
 
-        mockMvc.perform(delete("/api/users/" + savedUser.getId()))
+        mockMvc.perform(delete("/api/users/" + savedUser.getId())
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNoContent());
 
         assertThat(userRepository.findById(savedUser.getId())).isEmpty();
@@ -305,7 +325,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
         User updatedUser = userRepository.findById(savedUser.getId()).get();
@@ -365,7 +386,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isBadRequest());
     }
 
@@ -379,7 +401,8 @@ class UsersControllerIntegrationTest {
 
         mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isBadRequest());
     }
 

@@ -3,11 +3,14 @@ package hexlet.code.app.controller;
 import hexlet.code.app.dto.UserCreateDTO;
 import hexlet.code.app.dto.UserDTO;
 import hexlet.code.app.dto.UserUpdateDTO;
+import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -64,16 +67,18 @@ public class UsersController {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
-                             @Valid @RequestBody UserUpdateDTO dto) {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
-            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
-        }
-        var email = authentication.getName();
+                             @Valid @RequestBody UserUpdateDTO dto,
+                             @AuthenticationPrincipal(expression = "subject") String email) {
+        // First check if the target user exists
+        var targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User with id " + id + " not found"));
+
+        // Then verify the authenticated user is updating their own profile
         var currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("User not found: " + email));
+                .orElseThrow(() -> new AccessDeniedException("User not found: " + email));
         if (!currentUser.getId().equals(id)) {
-            throw new org.springframework.security.access.AccessDeniedException("You can only update your own profile");
+            throw new AccessDeniedException("You can only update your own profile");
         }
         return userService.updateUser(id, dto);
     }
@@ -81,16 +86,18 @@ public class UsersController {
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable long id) {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getName())) {
-            throw new org.springframework.security.access.AccessDeniedException("Authentication required");
-        }
-        var email = authentication.getName();
+    public void delete(@PathVariable long id,
+                       @AuthenticationPrincipal(expression = "subject") String email) {
+        // First check if the target user exists
+        var targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User with id " + id + " not found"));
+
+        // Then verify the authenticated user is deleting their own account
         var currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("User not found: " + email));
+                .orElseThrow(() -> new AccessDeniedException("User not found: " + email));
         if (!currentUser.getId().equals(id)) {
-            throw new org.springframework.security.access.AccessDeniedException("You can only delete your own account");
+            throw new AccessDeniedException("You can only delete your own account");
         }
         userService.deleteUser(id);
     }

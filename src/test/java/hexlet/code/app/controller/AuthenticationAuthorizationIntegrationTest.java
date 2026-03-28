@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -62,13 +60,15 @@ class AuthenticationAuthorizationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
+                .build();
         userRepository.deleteAll();
 
         // Create two test users and flush to ensure they're committed
         user1 = createUserAndSave("user1@example.com", "User", "One", "password123");
         user2 = createUserAndSave("user2@example.com", "User", "Two", "password456");
-        
+
         // Flush to ensure data is written to database
         userRepository.flush();
 
@@ -98,7 +98,7 @@ class AuthenticationAuthorizationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andReturn().getResponse().getContentAsString();
-        
+
         assertThat(response).isNotBlank();
         assertThat(response.split("\\.")).hasSize(3); // JWT has 3 parts
     }
@@ -140,7 +140,7 @@ class AuthenticationAuthorizationIntegrationTest {
     void updateUserOwnProfileShouldSucceed() throws Exception {
         // Fetch fresh user from database to ensure ID is correct
         User freshUser1 = userRepository.findByEmail("user1@example.com").orElseThrow();
-        
+
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setFirstName("Updated");
 
@@ -153,7 +153,7 @@ class AuthenticationAuthorizationIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName", is("Updated")))
                 .andReturn().getResponse().getContentAsString();
-        
+
         // Verify the response contains the updated data
         assertThat(result).contains("Updated");
     }
@@ -178,8 +178,8 @@ class AuthenticationAuthorizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("PUT /api/users/{id} - should return 403 without authentication")
-    void updateUserWithoutAuthShouldReturnForbidden() throws Exception {
+    @DisplayName("PUT /api/users/{id} - should return 401 without authentication")
+    void updateUserWithoutAuthShouldReturnUnauthorized() throws Exception {
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setFirstName("Hacked");
 
@@ -188,12 +188,12 @@ class AuthenticationAuthorizationIntegrationTest {
         mockMvc.perform(put("/api/users/" + user1.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("PUT /api/users/{id} - should return 403 with invalid token")
-    void updateUserWithInvalidTokenShouldReturnForbidden() throws Exception {
+    @DisplayName("PUT /api/users/{id} - should return 401 with invalid token")
+    void updateUserWithInvalidTokenShouldReturnUnauthorized() throws Exception {
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setFirstName("Hacked");
 
@@ -203,7 +203,7 @@ class AuthenticationAuthorizationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer invalid_token_here"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -211,7 +211,7 @@ class AuthenticationAuthorizationIntegrationTest {
     void deleteUserOwnAccountShouldSucceed() throws Exception {
         // Fetch fresh user from database to ensure ID is correct
         User freshUser1 = userRepository.findByEmail("user1@example.com").get();
-        
+
         mockMvc.perform(delete("/api/users/" + freshUser1.getId())
                         .header("Authorization", "Bearer " + user1Token))
                 .andExpect(status().isNoContent());
@@ -232,21 +232,21 @@ class AuthenticationAuthorizationIntegrationTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/users/{id} - should return 403 without authentication")
-    void deleteUserWithoutAuthShouldReturnForbidden() throws Exception {
+    @DisplayName("DELETE /api/users/{id} - should return 401 without authentication")
+    void deleteUserWithoutAuthShouldReturnUnauthorized() throws Exception {
         mockMvc.perform(delete("/api/users/" + user1.getId()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         // Verify user was not deleted
         assertThat(userRepository.findById(user1.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("DELETE /api/users/{id} - should return 403 with invalid token")
-    void deleteUserWithInvalidTokenShouldReturnForbidden() throws Exception {
+    @DisplayName("DELETE /api/users/{id} - should return 401 with invalid token")
+    void deleteUserWithInvalidTokenShouldReturnUnauthorized() throws Exception {
         mockMvc.perform(delete("/api/users/" + user1.getId())
                         .header("Authorization", "Bearer invalid_token_here"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
         // Verify user was not deleted
         assertThat(userRepository.findById(user1.getId())).isPresent();
