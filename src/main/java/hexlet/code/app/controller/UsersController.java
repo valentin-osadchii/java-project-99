@@ -48,58 +48,33 @@ public class UsersController {
     @GetMapping(path = "")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDTO> index() {
-        var users = userService.getAll();
-        return users;
+        return userService.getAll();
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO show(@PathVariable long id) {
-        UserDTO result = null;
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
-        result = userMapper.map(user);
-        return result;
+        return userService.getUser(id);
     }
 
     @PostMapping(path = "")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO create(@RequestBody UserCreateDTO userData) {
-
-        var user = userMapper.map(userData);
-        user.setPassword(passwordEncoder.encode(userData.getPassword()));
-
-        userRepository.save(user);
-        var userDTO = userMapper.map(user);
-
-        return userDTO;
+        return userService.createUser(userData);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
                              @RequestBody UserUpdateDTO dto) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(""));
-
-        userMapper.update(dto, user);
-
-        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        }
-
-        userRepository.save(user);
-        return userMapper.map(user);
+        return userService.updateUser(id, dto);
     }
-    // END
+
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product with id " + id + " not found");
-        }
-        userRepository.deleteById(id);
+        userService.deleteUser(id);
     }
 
 }
