@@ -40,9 +40,15 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 
 
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test") {
+		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+	}
 
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	// Additional test dependencies for MockMvc
+	testImplementation("org.springframework:spring-webmvc")
+	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
 
 	//lombok
 	compileOnly("org.projectlombok:lombok:$lombokVersion")

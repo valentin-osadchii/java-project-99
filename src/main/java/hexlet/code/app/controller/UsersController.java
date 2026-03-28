@@ -1,4 +1,4 @@
-package hexlet.code.app.contoller;
+package hexlet.code.app.controller;
 
 import hexlet.code.app.dto.UserCreateDTO;
 import hexlet.code.app.dto.UserDTO;
@@ -8,6 +8,7 @@ import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 
+import hexlet.code.app.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,32 +30,34 @@ public class UsersController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
 
-    public UsersController(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UsersController(UserRepository userRepository,
+                           UserMapper userMapper,
+                           PasswordEncoder passwordEncoder,
+                           UserService userService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
 
 
     @GetMapping(path = "")
+    @ResponseStatus(HttpStatus.OK)
     public List<UserDTO> index() {
-        return userRepository.findAll()
-                .stream()
-                .map(u -> userMapper.map(u))
-                .toList();
+        var users = userService.getAll();
+        return users;
     }
 
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO show(@PathVariable long id) {
         UserDTO result = null;
-        // BEGIN (write your solution here)
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
-        // END
         result = userMapper.map(user);
         return result;
     }
@@ -79,11 +82,11 @@ public class UsersController {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(""));
 
+        userMapper.update(dto, user);
+
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
-
-        userMapper.update(dto, user);
 
         userRepository.save(user);
         return userMapper.map(user);
