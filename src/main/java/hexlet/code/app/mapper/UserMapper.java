@@ -18,15 +18,10 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public abstract class UserMapper {
-//    @Mapping(target = "category.id", source = "categoryId")
-    //@Mapping(target = "category.name", source = "categoryName")
     public abstract User map(UserCreateDTO dto);
 
-//    @Mapping(source = "category.id", target = "categoryId")
-//    @Mapping(source = "category.name", target = "categoryName")
     public abstract UserDTO map(User model);
 
-//    @Mapping(target = "category.id", source = "categoryId")
     public abstract void update(UserUpdateDTO dto, @MappingTarget User model);
 }
 
