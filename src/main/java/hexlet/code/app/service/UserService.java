@@ -6,6 +6,9 @@ import hexlet.code.app.dto.UserUpdateDTO;
 import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -44,9 +47,10 @@ public class UserService {
         return userMapper.map(user);
     }
 
+    @PreAuthorize("@userService.isOwner(#id)")
     public UserDTO updateUser(long id, UserUpdateDTO userData) {
         var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(""));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
         userMapper.update(userData, user);
 
@@ -58,11 +62,38 @@ public class UserService {
         return userMapper.map(user);
     }
 
+    @PreAuthorize("@userService.isOwner(#id)")
     public void deleteUser(long id) {
         if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product with id " + id + " not found");
+            throw new ResourceNotFoundException("User with id " + id + " not found");
         }
         userRepository.deleteById(id);
+    }
+
+    public boolean isOwner(Long userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        String email = authentication.getName();
+        var currentUser = userRepository.findByEmail(email);
+
+        // If current user doesn't exist, return false (will result in 403)
+        if (currentUser.isEmpty()) {
+            return false;
+        }
+
+        // Check if target user exists
+        var targetUserExists = userRepository.existsById(userId);
+
+        // If target user doesn't exist, return true to let the service method throw 404
+        if (!targetUserExists) {
+            return true;
+        }
+
+        // Check if current user owns the target user
+        return currentUser.get().getId().equals(userId);
     }
 
 }
