@@ -7,6 +7,7 @@ import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +25,14 @@ public class DataInitializer {
     private final PasswordEncoder passwordEncoder;
     private final TaskStatusRepository taskStatusRepository;
 
+    @Value("${hexlet.data-initializer.enabled:true}")
+    private boolean enabled;
+
     @PostConstruct
     public void init() {
+        if (!enabled) {
+            return;
+        }
         if (userRepository.findByEmail("hexlet@example.com").isEmpty()) {
             User admin = new User();
             admin.setEmail("hexlet@example.com");
@@ -74,6 +81,7 @@ public class DataInitializer {
         }
     }
 
-    private record StatusSeed(String slug, String name) {}
+    private record StatusSeed(String slug, String name) {
+    }
 
 }
