@@ -2,6 +2,9 @@ package hexlet.code.app.dto;
 
 import java.time.LocalDate;
 
+import lombok.Data;
+
+@Data
 public class TaskDTO {
     private Long id;
     private Integer index;

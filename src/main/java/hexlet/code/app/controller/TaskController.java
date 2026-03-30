@@ -1,7 +1,6 @@
 package hexlet.code.app.controller;
 
 import hexlet.code.app.dto.TaskDTO;
-import hexlet.code.app.dto.TaskStatusDTO;
 import hexlet.code.app.mapper.TaskMapper;
 import hexlet.code.app.repository.TaskRepository;
 import jakarta.servlet.http.HttpServletResponse;

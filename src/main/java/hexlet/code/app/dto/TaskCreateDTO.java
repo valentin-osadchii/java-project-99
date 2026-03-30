@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import lombok.Data;
+
+@Data
 public class TaskCreateDTO {
 
     @Min(value = 0, message = "Index cannot be negative")

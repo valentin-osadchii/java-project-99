@@ -31,11 +31,13 @@ public abstract class TaskMapper {
     @Mapping(target = "title", source = "name")
     @Mapping(target = "content", source = "description")
     @Mapping(target = "status", source = "taskStatus.name")
+    @Mapping(target = "index", source = "index")
     public abstract TaskDTO map(Task model);
 
     @Mapping(target = "assignee", source = "assigneeId")
     @Mapping(target = "name", source = "title")
     @Mapping(target = "description", source = "content")
     @Mapping(target = "taskStatus.name", source = "status")
+    @Mapping(target = "index", source = "index")
     public abstract void update(TaskUpdateDTO dto, @MappingTarget Task model);
 }

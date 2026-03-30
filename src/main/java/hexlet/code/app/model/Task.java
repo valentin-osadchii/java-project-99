@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -14,6 +15,7 @@ import java.time.LocalDate;
 
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+@Data
 public class Task implements BaseEntity {
 
     @Id
