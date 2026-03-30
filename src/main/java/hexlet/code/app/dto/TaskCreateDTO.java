@@ -1,0 +1,22 @@
+package hexlet.code.app.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public class TaskCreateDTO {
+
+    @Min(value = 0, message = "Index cannot be negative")
+    private Integer index;
+
+    private Long assigneeId;
+
+    @Size(min = 1)
+    private String title;
+
+
+    private String content;
+
+    @NotBlank
+    private String status;
+}
