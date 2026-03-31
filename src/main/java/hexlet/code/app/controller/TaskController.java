@@ -1,29 +1,42 @@
 package hexlet.code.app.controller;
 
 import hexlet.code.app.dto.TaskDTO;
-import hexlet.code.app.mapper.TaskMapper;
-import hexlet.code.app.repository.TaskRepository;
+import hexlet.code.app.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@RestController
+@RequestMapping("/api/tasks")
 public class TaskController {
-    private final TaskRepository taskRepository;
-    private final TaskMapper taskMapper;
-    public TaskController(TaskRepository taskRepository, TaskMapper taskMapper) {
-        this.taskRepository = taskRepository;
-        this.taskMapper = taskMapper;
+    private final TaskService taskService;
+
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
     }
 
     @GetMapping(path = "")
     @ResponseStatus(HttpStatus.OK)
     public List<TaskDTO> index(HttpServletResponse response) {
-        var tasks = taskRepository.findAll().stream().map(taskMapper::map).toList();
+        var tasks = taskService.getAll();
         response.setHeader("X-Total-Count", String.valueOf(tasks.size()));
         return tasks;
     }
 
+    @GetMapping(path = "/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public TaskDTO show(@PathVariable long id) {
+        return taskService.getTask(id);
+    }
+
+
+
+    // TODO move logic to service
+    // TODO add database deletion relation for entities
 }
