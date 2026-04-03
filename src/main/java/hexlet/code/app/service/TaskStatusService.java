@@ -51,9 +51,8 @@ public class TaskStatusService {
     }
 
     public void delete(long id) {
-        if (!taskStatusRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product with id " + id + " not found");
-        }
-        taskStatusRepository.deleteById(id);
+        var taskStatus = taskStatusRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("TaskStatus with id " + id + " not found"));
+        taskStatusRepository.delete(taskStatus);
     }
 }

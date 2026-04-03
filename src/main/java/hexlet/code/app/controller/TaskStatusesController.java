@@ -62,8 +62,6 @@ public class TaskStatusesController {
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        // First check if the target user exists
-        var targetUser = taskStatusService.getTaskStatus(id);
         taskStatusService.delete(id);
     }
 

@@ -40,27 +40,27 @@ public class UsersController {
     @GetMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO show(@PathVariable long id) {
-        return userService.getUser(id);
+        return userService.get(id);
     }
 
     @PostMapping(path = "")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDTO create(@Valid @RequestBody UserCreateDTO userData) {
-        return userService.createUser(userData);
+        return userService.create(userData);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
                              @Valid @RequestBody UserUpdateDTO dto) {
-        return userService.updateUser(id, dto);
+        return userService.update(id, dto);
     }
 
 
     @DeleteMapping(path = "/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
-        userService.deleteUser(id);
+        userService.delete(id);
     }
 
 }

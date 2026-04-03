@@ -32,13 +32,13 @@ public class UserService {
         return users.stream().map(userMapper::map).toList();
     }
 
-    public UserDTO getUser(long id) {
+    public UserDTO get(long id) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
         return userMapper.map(user);
     }
 
-    public UserDTO createUser(UserCreateDTO userData) {
+    public UserDTO create(UserCreateDTO userData) {
         var user = userMapper.map(userData);
         user.setPassword(passwordEncoder.encode(userData.getPassword()));
 
@@ -48,7 +48,7 @@ public class UserService {
     }
 
     @PreAuthorize("@userService.isOwner(#id)")
-    public UserDTO updateUser(long id, UserUpdateDTO userData) {
+    public UserDTO update(long id, UserUpdateDTO userData) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
@@ -63,11 +63,10 @@ public class UserService {
     }
 
     @PreAuthorize("@userService.isOwner(#id)")
-    public void deleteUser(long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User with id " + id + " not found");
-        }
-        userRepository.deleteById(id);
+    public void delete(long id) {
+        var user = userRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + "not fount"));
+        userRepository.delete(user);
     }
 
     public boolean isOwner(Long userId) {
@@ -79,20 +78,16 @@ public class UserService {
         String email = authentication.getName();
         var currentUser = userRepository.findByEmail(email);
 
-        // If current user doesn't exist, return false (will result in 403)
         if (currentUser.isEmpty()) {
             return false;
         }
 
-        // Check if target user exists
         var targetUserExists = userRepository.existsById(userId);
 
-        // If target user doesn't exist, return true to let the service method throw 404
         if (!targetUserExists) {
             return true;
         }
 
-        // Check if current user owns the target user
         return currentUser.get().getId().equals(userId);
     }
 
