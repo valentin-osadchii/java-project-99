@@ -62,18 +62,16 @@ public class TaskService {
         var task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task with id " + id + " not found"));
 
-        var status = taskData.getStatus();
-        if (status != null) {
+        if (taskData.getStatus() != null) {
             var taskStatus = taskStatusRepository.findTaskStatusBySlug(taskData.getStatus())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "TaskStatus '" + taskData.getStatus() + "' not found"));
-                 task.setTaskStatus(taskStatus);
+            task.setTaskStatus(taskStatus);
         }
 
-        var assigneeId = taskData.getAssigneeId();
-        if (assigneeId != null) {
-            var user = userRepository.findById(assigneeId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Assignee with id " + assigneeId + " not found"));
+        if (taskData.getAssigneeId() != null) {
+            var user = userRepository.findById(taskData.getAssigneeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Assignee with id " + taskData.getAssigneeId() + " not found"));
             task.setAssignee(user);
         }
 

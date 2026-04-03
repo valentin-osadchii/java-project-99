@@ -1,26 +1,23 @@
 package hexlet.code.app.dto;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import lombok.Data;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 
 @Data
 public class TaskUpdateDTO {
 
     @Min(value = 0, message = "Index cannot be negative")
-    private JsonNullable<Integer> index;
+    private Integer index;
 
-    private JsonNullable<Long> assigneeId;
+    private Long assigneeId;
 
     @Size(min = 1)
     private String title;
 
-    private JsonNullable<String> content;
+    private String content;
 
-    @NotBlank
     private String status;
 }

@@ -2,6 +2,7 @@ package hexlet.code.app.controller;
 
 import tools.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.TaskCreateDTO;
+import hexlet.code.app.dto.TaskUpdateDTO;
 import hexlet.code.app.model.Task;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.model.User;
@@ -9,6 +10,7 @@ import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.util.JWTUtils;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -301,6 +304,219 @@ class TaskControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ==================== update() method tests ====================
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update task title")
+    void updateTaskTitleShouldUpdateSuccessfully() throws Exception {
+        String requestBody = """
+                {
+                  "title": "Updated Task Title"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("Updated Task Title")))
+                .andExpect(jsonPath("$.index", is(1)))
+                .andExpect(jsonPath("$.content", is("Test Description")));
+
+        Task updatedTask = taskRepository.findById(savedTask.getId()).get();
+        assertThat(updatedTask.getName()).isEqualTo("Updated Task Title");
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update task status")
+    void updateTaskStatusShouldUpdateSuccessfully() throws Exception {
+        TaskStatus newStatus = createTaskStatusAndSave("In Progress", "in-progress");
+
+        String requestBody = """
+                {
+                  "status": "in-progress"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("in-progress")));
+
+        Task updatedTask = taskRepository.findById(savedTask.getId()).get();
+        assertThat(updatedTask.getTaskStatus().getSlug()).isEqualTo("in-progress");
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update task assignee")
+    void updateTaskAssigneeShouldUpdateSuccessfully() throws Exception {
+        User newAssignee = createUserAndSave("new@example.com", "New", "User", "password123");
+
+        String requestBody = """
+                {
+                  "assigneeId": %d
+                }
+                """.formatted(newAssignee.getId());
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id", is(newAssignee.getId().intValue())));
+
+        Task updatedTask = taskRepository.findById(savedTask.getId()).get();
+        assertThat(updatedTask.getAssignee().getId()).isEqualTo(newAssignee.getId());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update multiple fields")
+    void updateTaskMultipleFieldsShouldUpdateAll() throws Exception {
+        TaskStatus newStatus = createTaskStatusAndSave("Done", "done");
+        User newAssignee = createUserAndSave("assignee2@example.com", "Assignee", "Two", "password123");
+
+        String requestBody = """
+                {
+                  "title": "Completely Updated Task",
+                  "content": "New content here",
+                  "index": 10,
+                  "status": "done",
+                  "assigneeId": %d
+                }
+                """.formatted(newAssignee.getId());
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("Completely Updated Task")))
+                .andExpect(jsonPath("$.content", is("New content here")))
+                .andExpect(jsonPath("$.index", is(10)))
+                .andExpect(jsonPath("$.status", is("done")))
+                .andExpect(jsonPath("$.assignee_id", is(newAssignee.getId().intValue())));
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should keep unchanged fields intact")
+    void updateTaskPartialUpdateShouldKeepUnchangedFields() throws Exception {
+        String requestBody = """
+                {
+                  "title": "Only Title Changed"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title", is("Only Title Changed")))
+                .andExpect(jsonPath("$.index", is(1)))
+                .andExpect(jsonPath("$.content", is("Test Description")))
+                .andExpect(jsonPath("$.status", is("test-status")));
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 404 when task not found")
+    void updateTaskWhenTaskNotFoundShouldReturn404() throws Exception {
+        Long nonExistentId = 999L;
+
+        String requestBody = """
+                {
+                  "title": "Won't be created"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + nonExistentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 404 when status not found")
+    void updateTaskWithNonExistentStatusShouldReturn404() throws Exception {
+        String requestBody = """
+                {
+                  "status": "non-existent-slug"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 404 when assignee not found")
+    void updateTaskWithNonExistentAssigneeShouldReturn404() throws Exception {
+        String requestBody = """
+                {
+                  "assigneeId": 999
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 400 when title is empty")
+    void updateTaskWithEmptyTitleShouldReturn400() throws Exception {
+        String requestBody = """
+                {
+                  "title": ""
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 400 when index is negative")
+    void updateTaskWithNegativeIndexShouldReturn400() throws Exception {
+        String requestBody = """
+                {
+                  "index": -5
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should return 401 when not authenticated")
+    void updateTaskWithoutAuthShouldReturn401() throws Exception {
+        String requestBody = """
+                {
+                  "title": "Unauthorized Update"
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isUnauthorized());
