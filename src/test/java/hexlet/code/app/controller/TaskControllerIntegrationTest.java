@@ -1,6 +1,7 @@
 package hexlet.code.app.controller;
 
 import tools.jackson.databind.ObjectMapper;
+import hexlet.code.app.dto.TaskCreateDTO;
 import hexlet.code.app.model.Task;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.model.User;
@@ -23,10 +24,12 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -123,6 +126,184 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.id", is(taskWithoutAssignee.getId().intValue())))
                 .andExpect(jsonPath("$.title", is("No Assignee Task")))
                 .andExpect(jsonPath("$.assignee_id").doesNotExist());
+    }
+
+    // ==================== create() method tests ====================
+
+    @Test
+    @DisplayName("POST /api/tasks - should create task with valid data and explicit status")
+    void createTaskWithValidDataAndExplicitStatusShouldCreateTask() throws Exception {
+        User assignee = createUserAndSave("assignee@example.com", "Assignee", "User", "password123");
+
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("New Task");
+        createDTO.setContent("Task description");
+        createDTO.setIndex(1);
+        createDTO.setAssigneeId(assignee.getId());
+        createDTO.setStatus("test-status");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        var result = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.title", is("New Task")))
+                .andExpect(jsonPath("$.content", is("Task description")))
+                .andExpect(jsonPath("$.index", is(1)))
+                .andExpect(jsonPath("$.status", is("test-status")))
+                .andExpect(jsonPath("$.createdAt", notNullValue()))
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
+        assertThat(taskRepository.findById(createdTaskId)).isPresent();
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should create task with all fields populated")
+    void createTaskWithAllFieldsPopulatedShouldCreateTask() throws Exception {
+        User assignee = createUserAndSave("dev@example.com", "Dev", "User", "password123");
+
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Complete Feature");
+        createDTO.setContent("Implement the new feature");
+        createDTO.setIndex(5);
+        createDTO.setAssigneeId(assignee.getId());
+        createDTO.setStatus("test-status");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        var result = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.title", is("Complete Feature")))
+                .andExpect(jsonPath("$.content", is("Implement the new feature")))
+                .andExpect(jsonPath("$.index", is(5)))
+                .andExpect(jsonPath("$.status", is("test-status")))
+                .andExpect(jsonPath("$.createdAt", notNullValue()))
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
+        assertThat(taskRepository.findById(createdTaskId)).isPresent();
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 404 when status slug does not exist")
+    void createTaskWithNonExistentStatusShouldReturn404() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task with Invalid Status");
+        createDTO.setContent("This status doesn't exist");
+        createDTO.setStatus("non-existent-slug");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 400 when status is missing")
+    void createTaskWithMissingStatusShouldReturn400() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task Without Status");
+        createDTO.setContent("Missing status field");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 400 when status is empty string")
+    void createTaskWithEmptyStatusShouldReturn400() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task with Empty Status");
+        createDTO.setContent("Empty status string");
+        createDTO.setStatus("");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 400 when title is empty")
+    void createTaskWithEmptyTitleShouldReturn400() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("");
+        createDTO.setContent("Task with empty title");
+        createDTO.setStatus("test-status");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 400 when index is negative")
+    void createTaskWithNegativeIndexShouldReturn400() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task with Negative Index");
+        createDTO.setContent("Invalid index");
+        createDTO.setIndex(-1);
+        createDTO.setStatus("test-status");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 400 when request body is empty")
+    void createTaskWithEmptyBodyShouldReturn400() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should return 401 when not authenticated")
+    void createTaskWithoutAuthShouldReturn401() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Unauthorized Task");
+        createDTO.setContent("Should not be created");
+        createDTO.setStatus("test-status");
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isUnauthorized());
     }
 
     // ==================== index() method tests ====================
