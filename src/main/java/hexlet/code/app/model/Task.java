@@ -3,8 +3,10 @@ package hexlet.code.app.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -33,10 +35,16 @@ public class Task implements BaseEntity {
     private String description;
 
     @ManyToOne
+    @JoinColumn(name = "task_status_id",
+            foreignKey = @ForeignKey(foreignKeyDefinition =
+                    "FOREIGN KEY (task_status_id) REFERENCES task_statuses(id) ON DELETE RESTRICT"))
     @NotNull
     private TaskStatus taskStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id",
+            foreignKey = @ForeignKey(foreignKeyDefinition =
+                    "FOREIGN KEY (assignee_id) REFERENCES users(id) ON DELETE RESTRICT"))
     private User assignee;
 
     @CreatedDate
