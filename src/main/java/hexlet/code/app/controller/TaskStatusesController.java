@@ -54,7 +54,6 @@ public class TaskStatusesController {
     @ResponseStatus(HttpStatus.OK)
     public TaskStatusDTO update(@PathVariable Long id,
                                 @Valid @RequestBody TaskStatusUpdateDTO dto) {
-        var targetTaskStatus = taskStatusService.getTaskStatus(id);
         return taskStatusService.update(id, dto);
     }
 

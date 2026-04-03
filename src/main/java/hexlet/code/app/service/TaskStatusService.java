@@ -27,7 +27,7 @@ public class TaskStatusService {
     }
 
     public TaskStatusDTO getTaskStatus(long id) {
-        var taskStatus = taskStatusRepository.findById((long) id)
+        var taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
         return taskStatusMapper.map(taskStatus);
     }
