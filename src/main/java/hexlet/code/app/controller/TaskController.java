@@ -2,8 +2,6 @@ package hexlet.code.app.controller;
 
 import hexlet.code.app.dto.TaskCreateDTO;
 import hexlet.code.app.dto.TaskDTO;
-import hexlet.code.app.dto.TaskStatusDTO;
-import hexlet.code.app.dto.TaskStatusUpdateDTO;
 import hexlet.code.app.dto.TaskUpdateDTO;
 import hexlet.code.app.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;

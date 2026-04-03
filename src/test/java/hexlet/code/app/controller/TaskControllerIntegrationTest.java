@@ -2,7 +2,6 @@ package hexlet.code.app.controller;
 
 import tools.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.TaskCreateDTO;
-import hexlet.code.app.dto.TaskUpdateDTO;
 import hexlet.code.app.model.Task;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.model.User;
@@ -10,7 +9,6 @@ import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.util.JWTUtils;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,10 @@
 // src/main/java/hexlet/code/app/config/DataInitializer.java
 package hexlet.code.app.config;
 
+import hexlet.code.app.model.Label;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.model.User;
+import hexlet.code.app.repository.LabelRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -24,6 +26,7 @@ public class DataInitializer {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TaskStatusRepository taskStatusRepository;
+    private final LabelRepository labelRepository;
 
     @Value("${hexlet.data-initializer.enabled:true}")
     private boolean enabled;
@@ -44,6 +47,7 @@ public class DataInitializer {
             System.out.println("✅ Admin user created: hexlet@example.com");
 
             initTaskStatuses();
+            initLabels();
         }
     }
 
@@ -60,7 +64,7 @@ public class DataInitializer {
         List<String> targetSlugs = defaults.stream().map(StatusSeed::slug).toList();
         Set<String> existingSlugs = taskStatusRepository.findAllBySlugIn(targetSlugs)
                 .stream()
-                .map(TaskStatus::getSlug) // или .slug() если у вас getter без get
+                .map(TaskStatus::getSlug)
                 .collect(Collectors.toSet());
 
         List<TaskStatus> toSave = defaults.stream()
@@ -78,6 +82,31 @@ public class DataInitializer {
             toSave.forEach(s -> System.out.println("✅ Task status created: " + s.getSlug()));
         } else {
             System.out.println("ℹ️ All task statuses are already up to date.");
+        }
+    }
+
+    @Transactional
+    public void initLabels() {
+        List<String> defaultLabels = List.of("feature", "bug");
+
+        Set<String> existingNames = labelRepository.findAll().stream()
+                .map(Label::getName)
+                .collect(Collectors.toSet());
+
+        List<Label> toSave = defaultLabels.stream()
+                .filter(name -> !existingNames.contains(name))
+                .map(name -> {
+                    Label label = new Label();
+                    label.setName(name);
+                    return label;
+                })
+                .toList();
+
+        if (!toSave.isEmpty()) {
+            labelRepository.saveAll(toSave);
+            toSave.forEach(l -> System.out.println("✅ Label created: " + l.getName()));
+        } else {
+            System.out.println("ℹ️ All default labels are already up to date.");
         }
     }
 

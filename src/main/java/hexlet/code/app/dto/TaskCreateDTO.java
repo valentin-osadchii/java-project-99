@@ -1,5 +1,7 @@
 package hexlet.code.app.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -22,4 +24,6 @@ public class TaskCreateDTO {
 
     @NotBlank
     private String status;
+
+    private List<Long> labelIds;
 }

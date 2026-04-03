@@ -5,11 +5,13 @@ import hexlet.code.app.dto.TaskDTO;
 import hexlet.code.app.dto.TaskUpdateDTO;
 import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.TaskMapper;
+import hexlet.code.app.repository.LabelRepository;
 import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -19,16 +21,19 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final UserRepository userRepository;
     private final TaskStatusRepository taskStatusRepository;
+    private final LabelRepository labelRepository;
 
 
     public TaskService(TaskRepository taskRepository,
                        TaskMapper taskMapper,
                        UserRepository userRepository,
-                       TaskStatusRepository taskStatusRepository) {
+                       TaskStatusRepository taskStatusRepository,
+                       LabelRepository labelRepository) {
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
         this.userRepository = userRepository;
         this.taskStatusRepository = taskStatusRepository;
+        this.labelRepository = labelRepository;
     }
 
     public List<TaskDTO> getAll() {
@@ -53,6 +58,12 @@ public class TaskService {
                                 : "Default status 'draft' not found"));
 
         task.setTaskStatus(taskStatus);
+
+        if (taskData.getLabelIds() != null) {
+            var labels = new HashSet<>(labelRepository.findAllById(taskData.getLabelIds()));
+            task.setLabels(labels);
+        }
+
         taskRepository.save(task);
         return taskMapper.map(task);
     }
@@ -70,9 +81,16 @@ public class TaskService {
         }
 
         if (taskData.getAssigneeId() != null) {
-            var user = userRepository.findById(taskData.getAssigneeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Assignee with id " + taskData.getAssigneeId() + " not found"));
+            var assigneeId = taskData.getAssigneeId();
+            var user = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Assignee with id " + assigneeId + " not found"));
             task.setAssignee(user);
+        }
+
+        if (taskData.getLabelIds() != null) {
+            var labels = new HashSet<>(labelRepository.findAllById(taskData.getLabelIds()));
+            task.setLabels(labels);
         }
 
         taskMapper.update(taskData, task);

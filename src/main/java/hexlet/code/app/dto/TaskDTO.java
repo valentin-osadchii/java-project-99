@@ -2,6 +2,7 @@ package hexlet.code.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.Data;
 
@@ -17,4 +18,7 @@ public class TaskDTO {
     private String title;
     private String content;
     private String status;
+
+    @JsonProperty("label_ids")
+    private List<Long> labelIds;
 }
