@@ -6,6 +6,7 @@ import hexlet.code.app.dto.TaskStatusUpdateDTO;
 import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.TaskStatusMapper;
 import hexlet.code.app.repository.TaskStatusRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,6 +54,14 @@ public class TaskStatusService {
     public void delete(long id) {
         var taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("TaskStatus with id " + id + " not found"));
-        taskStatusRepository.delete(taskStatus);
+
+        try {
+            taskStatusRepository.delete(taskStatus);
+
+        }
+        catch (DataIntegrityViolationException e) {
+            throw new DataIntegrityViolationException(
+                    "Cannot delete task status because it is referenced by one or more tasks");
+        }
     }
 }
