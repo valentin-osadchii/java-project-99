@@ -2,6 +2,7 @@ package hexlet.code.app.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -25,5 +26,6 @@ public class TaskCreateDTO {
     @NotBlank
     private String status;
 
+    @JsonProperty("label_ids")
     private List<Long> labelIds;
 }

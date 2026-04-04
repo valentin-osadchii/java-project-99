@@ -2,9 +2,12 @@ package hexlet.code.app.controller;
 
 import tools.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.TaskCreateDTO;
+import hexlet.code.app.dto.TaskUpdateDTO;
+import hexlet.code.app.model.Label;
 import hexlet.code.app.model.Task;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.model.User;
+import hexlet.code.app.repository.LabelRepository;
 import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
@@ -58,6 +61,9 @@ class TaskControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private LabelRepository labelRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -211,6 +217,114 @@ class TaskControllerIntegrationTest {
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should create task with label_ids")
+    void createTaskWithLabelIdsShouldSaveAndReturnLabels() throws Exception {
+        Label bugLabel = createLabelAndSave("bug");
+        Label featureLabel = createLabelAndSave("feature");
+
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task with labels");
+        createDTO.setContent("Description");
+        createDTO.setStatus("test-status");
+        createDTO.setLabelIds(java.util.List.of(bugLabel.getId(), featureLabel.getId()));
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        var result = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.title", is("Task with labels")))
+                .andExpect(jsonPath("$.label_ids", notNullValue()))
+                .andExpect(jsonPath("$.label_ids", hasSize(2)))
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
+        Task savedTask = taskRepository.findById(createdTaskId).orElseThrow();
+        assertThat(savedTask.getLabels()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("POST /api/tasks - should create task with empty label_ids")
+    void createTaskWithEmptyLabelIdsShouldHaveNoLabels() throws Exception {
+        TaskCreateDTO createDTO = new TaskCreateDTO();
+        createDTO.setTitle("Task without labels");
+        createDTO.setContent("Description");
+        createDTO.setStatus("test-status");
+        createDTO.setLabelIds(java.util.List.of());
+
+        String requestBody = objectMapper.writeValueAsString(createDTO);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.label_ids", notNullValue()))
+                .andExpect(jsonPath("$.label_ids", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update task label_ids")
+    void updateTaskWithLabelIdsShouldUpdateLabels() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-labels");
+        User user = createUserAndSave("labels@example.com", "Labels", "User", "password");
+        Label bugLabel = createLabelAndSave("bug");
+        Label featureLabel = createLabelAndSave("feature");
+
+        Task task = createTaskAndSave("Task to update", 1, "Description", status, user);
+        task.setLabels(new java.util.HashSet<>(java.util.Set.of(bugLabel)));
+        taskRepository.save(task);
+
+        TaskUpdateDTO updateDTO = new TaskUpdateDTO();
+        updateDTO.setLabelIds(java.util.List.of(featureLabel.getId()));
+
+        String requestBody = objectMapper.writeValueAsString(updateDTO);
+
+        mockMvc.perform(put("/api/tasks/" + task.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.label_ids", hasSize(1)))
+                .andExpect(jsonPath("$.label_ids[0]", is(featureLabel.getId().intValue())));
+
+        Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
+        assertThat(updatedTask.getLabels()).hasSize(1);
+        assertThat(updatedTask.getLabels().iterator().next().getId()).isEqualTo(featureLabel.getId());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should remove all labels when label_ids is empty")
+    void updateTaskWithEmptyLabelIdsShouldRemoveAllLabels() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-rm-labels");
+        User user = createUserAndSave("rmlabels@example.com", "Rm", "User", "password");
+        Label bugLabel = createLabelAndSave("bug");
+
+        Task task = createTaskAndSave("Task to clear labels", 1, "Description", status, user);
+        task.setLabels(new java.util.HashSet<>(java.util.Set.of(bugLabel)));
+        taskRepository.save(task);
+
+        TaskUpdateDTO updateDTO = new TaskUpdateDTO();
+        updateDTO.setLabelIds(java.util.List.of());
+
+        String requestBody = objectMapper.writeValueAsString(updateDTO);
+
+        mockMvc.perform(put("/api/tasks/" + task.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.label_ids", hasSize(0)));
+
+        Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
+        assertThat(updatedTask.getLabels()).isEmpty();
     }
 
     @Test
@@ -575,6 +689,187 @@ class TaskControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // ========== Pagination Tests ==========
+
+    @Test
+    @DisplayName("GET /api/tasks - should respect _perPage parameter")
+    void getAllTasksWithPerPageShouldLimitResults() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-pagination");
+        User user = createUserAndSave("page@example.com", "Page", "User", "password");
+        for (int i = 1; i <= 15; i++) {
+            createTaskAndSave("Task " + i, i, "Description " + i, status, user);
+        }
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("_page", "1")
+                        .param("_perPage", "10")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(10)));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks - should return second page with _page=2")
+    void getAllTasksWithPageTwoShouldReturnNextBatch() throws Exception {
+        taskRepository.deleteAll();
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-page2");
+        User user = createUserAndSave("page2@example.com", "Page2", "User", "password");
+        for (int i = 1; i <= 15; i++) {
+            createTaskAndSave("Task " + i, i, "Description " + i, status, user);
+        }
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("_page", "2")
+                        .param("_perPage", "10")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(5)));
+    }
+
+    // ========== Filter Tests ==========
+
+    @Test
+    @DisplayName("GET /api/tasks?titleCont= - should filter tasks by title substring")
+    void getTasksFilteredByTitleShouldReturnMatchingTasks() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-title");
+        User user = createUserAndSave("title@example.com", "Title", "User", "password");
+        createTaskAndSave("Bug fix", 1, "Description", status, user);
+        createTaskAndSave("Feature implementation", 2, "Description", status, user);
+        createTaskAndSave("Bug in login", 3, "Description", status, user);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("titleCont", "Bug")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].title", is("Bug fix")))
+                .andExpect(jsonPath("$[1].title", is("Bug in login")));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks?assigneeId= - should filter tasks by assignee")
+    void getTasksFilteredByAssigneeShouldReturnMatchingTasks() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-assignee");
+        User user1 = createUserAndSave("user1@example.com", "User", "One", "password");
+        User user2 = createUserAndSave("user2@example.com", "User", "Two", "password");
+        createTaskAndSave("Task by User1", 1, "Description", status, user1);
+        createTaskAndSave("Another by User1", 2, "Description", status, user1);
+        createTaskAndSave("Task by User2", 3, "Description", status, user2);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("assigneeId", String.valueOf(user1.getId()))
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks?status= - should filter tasks by status slug")
+    void getTasksFilteredByStatusShouldReturnMatchingTasks() throws Exception {
+        TaskStatus draft = createTaskStatusAndSave("Draft", "draft-filter");
+        TaskStatus review = createTaskStatusAndSave("Review", "to_review-filter");
+        User user = createUserAndSave("status@example.com", "Status", "User", "password");
+        createTaskAndSave("Draft task", 1, "Description", draft, user);
+        createTaskAndSave("Review task", 2, "Description", review, user);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("status", "to_review-filter")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Review task")));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks?labelId= - should filter tasks by label")
+    void getTasksFilteredByLabelShouldReturnMatchingTasks() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-label");
+        User user = createUserAndSave("label@example.com", "Label", "User", "password");
+        Label bugLabel = createLabelAndSave("bug");
+        Label featureLabel = createLabelAndSave("feature");
+
+        Task task1 = createTaskAndSave("Bug fix", 1, "Fix crash", status, user);
+        Task task2 = createTaskAndSave("New feature", 2, "Add feature", status, user);
+        Task task3 = createTaskAndSave("Both", 3, "Has both", status, user);
+
+        task1.setLabels(new java.util.HashSet<>(java.util.Set.of(bugLabel)));
+        task2.setLabels(new java.util.HashSet<>(java.util.Set.of(featureLabel)));
+        task3.setLabels(new java.util.HashSet<>(java.util.Set.of(bugLabel, featureLabel)));
+        taskRepository.saveAll(java.util.List.of(task1, task2, task3));
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("labelId", String.valueOf(bugLabel.getId()))
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks - should apply multiple filters together")
+    void getTasksWithMultipleFiltersShouldReturnIntersectedResults() throws Exception {
+        TaskStatus draft = createTaskStatusAndSave("Draft", "draft-multi");
+        User user = createUserAndSave("multi@example.com", "Multi", "User", "password");
+        Label bugLabel = createLabelAndSave("multi-bug");
+
+        Task task1 = createTaskAndSave("Critical Bug", 1, "Critical issue", draft, user);
+        createTaskAndSave("Minor Bug", 2, "Minor issue", draft, user);
+        createTaskAndSave("Feature", 3, "New thing", draft, user);
+
+        task1.setLabels(new java.util.HashSet<>(java.util.Set.of(bugLabel)));
+        taskRepository.save(task1);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("titleCont", "Bug")
+                        .param("labelId", String.valueOf(bugLabel.getId()))
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Critical Bug")));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks?titleCont= with no match - should return empty list")
+    void getTasksByTitleWithNoMatchShouldReturnEmptyList() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-nomatch");
+        User user = createUserAndSave("nomatch@example.com", "No", "Match", "password");
+        createTaskAndSave("Some task", 1, "Description", status, user);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("titleCont", "nonexistent")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks?assigneeId= with non-existent assignee - should return empty list")
+    void getTasksByAssigneeWithNonExistentIdShouldReturnEmptyList() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-noassignee");
+        User user = createUserAndSave("noassignee@example.com", "No", "Assignee", "password");
+        createTaskAndSave("Some task", 1, "Description", status, user);
+
+        mockMvc.perform(get("/api/tasks")
+                        .param("assigneeId", "99999")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @DisplayName("GET /api/tasks with no params - should use default pagination")
+    void getAllTasksWithDefaultPagination() throws Exception {
+        TaskStatus status = createTaskStatusAndSave("Draft", "draft-default");
+        User user = createUserAndSave("default@example.com", "Default", "User", "password");
+        for (int i = 1; i <= 15; i++) {
+            createTaskAndSave("Task " + i, i, "Description", status, user);
+        }
+
+        mockMvc.perform(get("/api/tasks")
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(10)));
+    }
+
     private TaskStatus createTaskStatusAndSave(String name, String slug) {
         TaskStatus status = new TaskStatus();
         status.setName(name);
@@ -602,5 +897,11 @@ class TaskControllerIntegrationTest {
             task.setAssignee(assignee);
         }
         return taskRepository.save(task);
+    }
+
+    private Label createLabelAndSave(String name) {
+        Label label = new Label();
+        label.setName(name);
+        return labelRepository.save(label);
     }
 }

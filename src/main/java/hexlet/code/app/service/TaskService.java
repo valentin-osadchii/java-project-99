@@ -2,13 +2,18 @@ package hexlet.code.app.service;
 
 import hexlet.code.app.dto.TaskCreateDTO;
 import hexlet.code.app.dto.TaskDTO;
+import hexlet.code.app.dto.TaskParamsDTO;
 import hexlet.code.app.dto.TaskUpdateDTO;
 import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.TaskMapper;
+import hexlet.code.app.model.Task;
 import hexlet.code.app.repository.LabelRepository;
 import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
+import hexlet.code.app.specification.TaskSpecification;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -23,7 +28,6 @@ public class TaskService {
     private final TaskStatusRepository taskStatusRepository;
     private final LabelRepository labelRepository;
 
-
     public TaskService(TaskRepository taskRepository,
                        TaskMapper taskMapper,
                        UserRepository userRepository,
@@ -36,9 +40,9 @@ public class TaskService {
         this.labelRepository = labelRepository;
     }
 
-    public List<TaskDTO> getAll() {
-        var taskStatuses = taskRepository.findAll();
-        return taskStatuses.stream().map(taskMapper::map).toList();
+    public List<TaskDTO> getAll(Specification<Task> spec, Pageable pageable) {
+        var tasks = taskRepository.findAll(spec, pageable);
+        return tasks.stream().map(taskMapper::map).toList();
     }
 
     public TaskDTO getTask(long id) {
