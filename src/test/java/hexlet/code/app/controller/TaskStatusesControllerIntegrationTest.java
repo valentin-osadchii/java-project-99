@@ -131,6 +131,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         ResultActions result = mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -153,6 +154,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -175,6 +177,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -190,6 +193,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -205,6 +209,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -220,6 +225,7 @@ class TaskStatusesControllerIntegrationTest {
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -229,6 +235,7 @@ class TaskStatusesControllerIntegrationTest {
     @DisplayName("POST /api/task_statuses - should return 400 when request body is empty")
     void createTaskStatusWhenEmptyBodyShouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/api/task_statuses")
+                        .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
