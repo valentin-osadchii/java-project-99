@@ -246,8 +246,8 @@ class TaskControllerIntegrationTest {
 
         String responseBody = result.getResponse().getContentAsString();
         Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
-        Task savedTask = taskRepository.findById(createdTaskId).orElseThrow();
-        assertThat(savedTask.getLabels()).hasSize(2);
+        Task createdTask = taskRepository.findById(createdTaskId).orElseThrow();
+        assertThat(createdTask.getLabels()).hasSize(2);
     }
 
     @Test
