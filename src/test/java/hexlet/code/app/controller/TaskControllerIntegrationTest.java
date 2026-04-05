@@ -84,6 +84,7 @@ class TaskControllerIntegrationTest {
                 .apply(org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
                 .build();
         taskRepository.deleteAll();
+        labelRepository.deleteAll();
         taskStatusRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -719,8 +720,8 @@ class TaskControllerIntegrationTest {
         }
 
         mockMvc.perform(get("/api/tasks")
-                        .param("_page", "2")
-                        .param("_perPage", "10")
+                        .param("offset", "2")
+                        .param("limit", "10")
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)));
@@ -879,7 +880,7 @@ class TaskControllerIntegrationTest {
 
     private User createUserAndSave(String email, String firstName, String lastName, String password) {
         User user = new User();
-        user.setEmail(email);
+        user.setEmail(email + "-" + System.nanoTime());
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setPassword(passwordEncoder.encode(password));
@@ -901,7 +902,7 @@ class TaskControllerIntegrationTest {
 
     private Label createLabelAndSave(String name) {
         Label label = new Label();
-        label.setName(name);
+        label.setName(name + "-" + System.nanoTime());
         return labelRepository.save(label);
     }
 }

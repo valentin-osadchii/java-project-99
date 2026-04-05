@@ -39,10 +39,10 @@ public class TaskController {
     @GetMapping(path = "")
     @ResponseStatus(HttpStatus.OK)
     public List<TaskDTO> index(@ModelAttribute TaskParamsDTO params,
-                               @RequestParam(defaultValue = "1") int _page,
-                               @RequestParam(defaultValue = "10") int _perPage,
+                               @RequestParam(defaultValue = "1") int offset,
+                               @RequestParam(defaultValue = "10") int limit,
                                HttpServletResponse response) {
-        var pageable = PageRequest.of(_page - 1, _perPage);
+        var pageable = PageRequest.of(offset - 1, limit);
         var spec = taskSpecification.build(params);
         var tasks = taskService.getAll(spec, pageable);
         response.setHeader("X-Total-Count", String.valueOf(tasks.size()));

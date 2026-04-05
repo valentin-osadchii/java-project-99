@@ -58,8 +58,7 @@ public class TaskStatusService {
         try {
             taskStatusRepository.delete(taskStatus);
 
-        }
-        catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException e) {
             throw new DataIntegrityViolationException(
                     "Cannot delete task status because it is referenced by one or more tasks");
         }

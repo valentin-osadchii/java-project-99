@@ -69,7 +69,7 @@ public class UserService {
                         .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + "not found"));
         try {
             userRepository.delete(user);
-        } catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             throw new DataIntegrityViolationException(
                     "Cannot delete user because they are assigned to one or more tasks");
         }

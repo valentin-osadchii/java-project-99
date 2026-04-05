@@ -22,7 +22,7 @@ public class TaskSpecification {
 
     private Specification<Task> withTitleLike(String titlePart) {
         return (root, query, cb) ->
-                titlePart == null ? cb.conjunction() : cb.like(root.get("name"), "%" + titlePart + "%" );
+                titlePart == null ? cb.conjunction() : cb.like(root.get("name"), "%" + titlePart + "%");
     }
 
     private Specification<Task> withStatus(String status) {
