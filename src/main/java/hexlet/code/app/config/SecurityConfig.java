@@ -46,6 +46,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(java.util.List.of("*"));
@@ -58,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/assets/**", "/static/**", "/favicon.ico").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/webjars/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .anyRequest().authenticated())

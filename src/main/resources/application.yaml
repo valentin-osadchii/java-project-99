@@ -5,11 +5,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ""
   h2:
     console:
       enabled: true
