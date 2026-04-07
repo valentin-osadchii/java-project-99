@@ -32,24 +32,26 @@ public class RsaKeyProperties {
 
     @PostConstruct
     public void loadKeys() throws Exception {
-        if (publicKey != null && publicKey.startsWith("classpath:")) {
-            String pubKeyPath = publicKey.replace("classpath:", "");
-            String pubKeyContent = loadKeyFile(pubKeyPath);
+        if (publicKey != null) {
+            String pubKeyContent = loadKeyIfClasspath(publicKey);
             rsaPublicKey = parsePublicKey(pubKeyContent);
         }
-        if (privateKey != null && privateKey.startsWith("classpath:")) {
-            String privKeyPath = privateKey.replace("classpath:", "");
-            String privKeyContent = loadKeyFile(privKeyPath);
+        if (privateKey != null) {
+            String privKeyContent = loadKeyIfClasspath(privateKey);
             rsaPrivateKey = parsePrivateKey(privKeyContent);
         }
     }
 
-    private String loadKeyFile(String path) throws IOException {
-        ClassPathResource resource = new ClassPathResource(path);
-        try (var is = resource.getInputStream();
-             var reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            return reader.lines().collect(java.util.stream.Collectors.joining("\n"));
+    private String loadKeyIfClasspath(String keyRef) throws IOException {
+        if (keyRef.startsWith("classpath:")) {
+            String path = keyRef.replace("classpath:", "");
+            ClassPathResource resource = new ClassPathResource(path);
+            try (var is = resource.getInputStream();
+                 var reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                return reader.lines().collect(java.util.stream.Collectors.joining("\n"));
+            }
         }
+        return keyRef;
     }
 
     private RSAPublicKey parsePublicKey(String keyContent) throws Exception {
