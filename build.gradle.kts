@@ -76,6 +76,14 @@ dependencies {
 
 }
 
+configurations.all {
+	resolutionStrategy {
+		dependencySubstitution {
+			substitute(module("hexlet.code:app")).using(project(":"))
+		}
+	}
+}
+
 tasks.check {
 	dependsOn(tasks.checkstyleMain, tasks.checkstyleTest)
 }
