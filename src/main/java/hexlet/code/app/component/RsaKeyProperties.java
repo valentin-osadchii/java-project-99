@@ -1,7 +1,9 @@
 package hexlet.code.app.component;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -44,7 +46,10 @@ public class RsaKeyProperties {
 
     private String loadKeyFile(String path) throws IOException {
         ClassPathResource resource = new ClassPathResource(path);
-        return Files.readString(resource.getFile().toPath());
+        try (var is = resource.getInputStream();
+             var reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+            return reader.lines().collect(java.util.stream.Collectors.joining("\n"));
+        }
     }
 
     private RSAPublicKey parsePublicKey(String keyContent) throws Exception {
