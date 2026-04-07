@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
 	java
-	id("org.springframework.boot") version "4.0.4"
+	id("org.springframework.boot") version "3.4.4"
 	id("io.spring.dependency-management") version "1.1.7"
 	id("checkstyle")
 	id("application")
@@ -42,7 +42,7 @@ dependencies {
 
 	implementation("org.openapitools:jackson-databind-nullable:0.2.8")
 
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {

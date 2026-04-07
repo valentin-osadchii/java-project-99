@@ -1,6 +1,6 @@
 package hexlet.code.app.controller;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.LabelCreateDTO;
 import hexlet.code.app.dto.LabelUpdateDTO;
 import hexlet.code.app.model.Label;
