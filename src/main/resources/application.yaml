@@ -11,6 +11,8 @@ spring:
       path: /h2-console
       settings:
         web-allow-others: true
+server:
+  port: ${PORT:8080}
 rsa:
   private-key: classpath:certs/private.pem
   public-key: classpath:certs/public.pem
