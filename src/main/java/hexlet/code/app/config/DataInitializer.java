@@ -9,6 +9,7 @@ import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer {
 
     private final UserRepository userRepository;
@@ -47,7 +49,7 @@ public class DataInitializer {
             admin.setPassword(passwordEncoder.encode(adminPassword));
 
             userRepository.save(admin);
-            System.out.println("✅ Admin user created: hexlet@example.com");
+            log.info("✅ Admin user created: hexlet@example.com");
 
             initTaskStatuses();
             initLabels();
@@ -82,9 +84,9 @@ public class DataInitializer {
 
         if (!toSave.isEmpty()) {
             taskStatusRepository.saveAll(toSave);
-            toSave.forEach(s -> System.out.println("✅ Task status created: " + s.getSlug()));
+            toSave.forEach(s -> log.info("✅ Task status created: " + s.getSlug()));
         } else {
-            System.out.println("ℹ️ All task statuses are already up to date.");
+            log.info("ℹ️ All task statuses are already up to date.");
         }
     }
 
@@ -107,9 +109,9 @@ public class DataInitializer {
 
         if (!toSave.isEmpty()) {
             labelRepository.saveAll(toSave);
-            toSave.forEach(l -> System.out.println("✅ Label created: " + l.getName()));
+            toSave.forEach(l -> log.info("✅ Label created: " + l.getName()));
         } else {
-            System.out.println("ℹ️ All default labels are already up to date.");
+            log.info("ℹ️ All default labels are already up to date.");
         }
     }
 

@@ -449,7 +449,7 @@ class TaskControllerIntegrationTest {
     @Test
     @DisplayName("PUT /api/tasks/{id} - should update task status")
     void updateTaskStatusShouldUpdateSuccessfully() throws Exception {
-        TaskStatus newStatus = createTaskStatusAndSave("In Progress", "in-progress");
+        createTaskStatusAndSave("In Progress", "in-progress");
 
         String requestBody = """
                 {
@@ -493,7 +493,7 @@ class TaskControllerIntegrationTest {
     @Test
     @DisplayName("PUT /api/tasks/{id} - should update multiple fields")
     void updateTaskMultipleFieldsShouldUpdateAll() throws Exception {
-        TaskStatus newStatus = createTaskStatusAndSave("Done", "done");
+        createTaskStatusAndSave("Done", "done");
         User newAssignee = createUserAndSave("assignee2@example.com", "Assignee", "Two", "password123");
 
         String requestBody = """
