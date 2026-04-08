@@ -4,7 +4,9 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=valentin-osadchii_java-project-99&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=valentin-osadchii_java-project-99)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=valentin-osadchii_java-project-99&metric=coverage)](https://sonarcloud.io/summary/new_code?id=valentin-osadchii_java-project-99)
 
-[Project website](java-project-99-production-9a01.up.railway.app)
+## Описание проекта
+
+[Страница проекта](https://java-project-99-production-9a01.up.railway.app/)
 
 Приложение для создания и управления задачами, пользователями, статусами и метками. 
 Задачи можно назначатьь на исполнителя, фильтровать по названию, исполнителю, статусу и меткам, 
