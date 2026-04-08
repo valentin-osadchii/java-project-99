@@ -31,6 +31,9 @@ public class DataInitializer {
     @Value("${hexlet.data-initializer.enabled:true}")
     private boolean enabled;
 
+    @Value("${hexlet.data-initializer.admin-password:qwerty}")
+    private String adminPassword;
+
     @PostConstruct
     public void init() {
         if (!enabled) {
@@ -41,7 +44,7 @@ public class DataInitializer {
             admin.setEmail("hexlet@example.com");
             admin.setFirstName("Admin");
             admin.setLastName("System");
-            admin.setPassword(passwordEncoder.encode("qwerty"));
+            admin.setPassword(passwordEncoder.encode(adminPassword));
 
             userRepository.save(admin);
             System.out.println("✅ Admin user created: hexlet@example.com");
