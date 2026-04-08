@@ -47,8 +47,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    @SuppressWarnings("java:S4502") // CSRF is disabled because we use stateless JWT authentication
-    @SuppressWarnings("java:S5122") // I just dont want to fix it :D
+    // CSRF is disabled because we use stateless JWT authentication
+    @SuppressWarnings({"java:S4502", "java:S5122"}) // I just dont want to fix it :D
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
