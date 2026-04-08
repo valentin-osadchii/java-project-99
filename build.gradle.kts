@@ -3,19 +3,17 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
 	java
-	id("org.springframework.boot") version "3.3.9"
-	id("io.spring.dependency-management") version "1.1.7"
+	id("org.springframework.boot") version libs.versions.spring.boot.get()
+	alias(libs.plugins.spring.dependency.management)
 	id("checkstyle")
 	id("application")
-	id("org.sonarqube") version "7.2.3.7755"
+	id("org.sonarqube") version libs.versions.sonar.plugin.get()
 	jacoco
 
 }
 
 group = "hexlet.code"
 version = "0.0.1-SNAPSHOT"
-
-val lombokVersion = "1.18.34"
 
 application {
 	mainClass = "hexlet.code.AppApplication"
@@ -33,6 +31,7 @@ repositories {
 }
 
 dependencies {
+	// Spring Boot starters
 	implementation("org.springframework.boot:spring-boot-starter")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -40,45 +39,38 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
-	implementation("org.openapitools:jackson-databind-nullable:0.2.8")
+	// OpenAPI / Swagger
+	implementation(libs.springdoc)
+	implementation(libs.jackson.databind.nullable)
 
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+	// Object mapping
+	implementation(libs.mapstruct)
+	annotationProcessor(libs.mapstruct.processor)
 
+	// Lombok
+	compileOnly(libs.lombok)
+	annotationProcessor(libs.lombok)
 
+	// Databases
+	runtimeOnly("com.h2database:h2")
+	runtimeOnly("org.postgresql:postgresql")
+
+	// Configuration metadata
+	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+	// Testing
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
-
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-	// Additional test dependencies for MockMvc
 	testImplementation("org.springframework:spring-webmvc")
 	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
 	testImplementation("org.springframework.security:spring-security-test")
-
-	// CI test-data dependencies
-	testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
-	testImplementation("org.instancio:instancio-junit:5.0.1")
-	testImplementation("net.datafaker:datafaker:2.4.0")
-
-
-	//lombok
-	compileOnly("org.projectlombok:lombok:$lombokVersion")
-	annotationProcessor("org.projectlombok:lombok:$lombokVersion")
-
-	testCompileOnly("org.projectlombok:lombok:$lombokVersion")
-	testAnnotationProcessor("org.projectlombok:lombok:$lombokVersion")
-
-	runtimeOnly("com.h2database:h2")
-
-	runtimeOnly("org.postgresql:postgresql")
-
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-
-	implementation("org.mapstruct:mapstruct:1.5.5.Final")
-	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-
-
+	testImplementation(libs.json.unit.assertj)
+	testImplementation(libs.instancio)
+	testImplementation(libs.datafaker)
+	testCompileOnly(libs.lombok)
+	testAnnotationProcessor(libs.lombok)
 }
 
 configurations.all {

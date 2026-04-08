@@ -1,6 +1,5 @@
 package hexlet.code.app.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,14 +21,17 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtDecoder jwtDecoder;
+    private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
+    private final JwtDecoder jwtDecoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
+    public SecurityConfig(PasswordEncoder passwordEncoder,
+                          UserDetailsService userDetailsService,
+                          JwtDecoder jwtDecoder) {
+        this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
+        this.jwtDecoder = jwtDecoder;
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {

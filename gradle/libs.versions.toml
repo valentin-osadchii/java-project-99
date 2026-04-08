@@ -1,0 +1,24 @@
+[versions]
+mapstruct = "1.5.5.Final"
+lombok = "1.18.34"
+instancio = "5.0.1"
+datafaker = "2.4.0"
+springdoc = "2.6.0"
+spring-boot = "3.3.9"
+sonar-plugin = "7.2.3.7755"
+jackson-nullable = "0.2.8"
+json-unit = "4.1.0"
+spring-dependency-management = "1.1.7"
+
+[libraries]
+mapstruct = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+instancio = { group = "org.instancio", name = "instancio-junit", version.ref = "instancio" }
+datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
+springdoc = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+jackson-databind-nullable = { group = "org.openapitools", name = "jackson-databind-nullable", version.ref = "jackson-nullable" }
+json-unit-assertj = { group = "net.javacrumbs.json-unit", name = "json-unit-assertj", version.ref = "json-unit" }
+
+[plugins]
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }

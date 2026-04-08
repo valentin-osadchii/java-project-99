@@ -15,6 +15,8 @@ import java.util.List;
 @Service
 public class LabelService {
 
+    private static final String LABEL_NOT_FOUND = "Label with id %d not found";
+
     private final LabelRepository labelRepository;
     private final LabelMapper labelMapper;
 
@@ -31,7 +33,7 @@ public class LabelService {
 
     public LabelDTO getById(long id) {
         var label = labelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Label with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(LABEL_NOT_FOUND.formatted(id)));
         return labelMapper.map(label);
     }
 
@@ -43,7 +45,7 @@ public class LabelService {
 
     public LabelDTO update(long id, LabelUpdateDTO labelData) {
         var label = labelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Label with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(LABEL_NOT_FOUND.formatted(id)));
 
         labelMapper.update(labelData, label);
         labelRepository.save(label);
@@ -52,7 +54,7 @@ public class LabelService {
 
     public void delete(long id) {
         var label = labelRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Label with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(LABEL_NOT_FOUND.formatted(id)));
 
         try {
             labelRepository.delete(label);

@@ -20,6 +20,11 @@ import java.util.List;
 @Service
 public class TaskService {
 
+    private static final String TASK_NOT_FOUND = "Task with id %d not found";
+    private static final String TASK_STATUS_NOT_FOUND = "TaskStatus '%s' not found";
+    private static final String DEFAULT_TASK_STATUS_NOT_FOUND = "Default status 'draft' not found";
+    private static final String ASSIGNEE_NOT_FOUND = "Assignee with id %d not found";
+
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
     private final UserRepository userRepository;
@@ -45,7 +50,7 @@ public class TaskService {
 
     public TaskDTO getTask(long id) {
         var taskStatus = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND.formatted(id)));
         return taskMapper.map(taskStatus);
     }
 
@@ -56,8 +61,8 @@ public class TaskService {
         var taskStatus = taskStatusRepository.findTaskStatusBySlug(statusSlug)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         taskData.getStatus() != null
-                                ? "TaskStatus '" + taskData.getStatus() + "' not found"
-                                : "Default status 'draft' not found"));
+                                ? TASK_STATUS_NOT_FOUND.formatted(taskData.getStatus())
+                                : DEFAULT_TASK_STATUS_NOT_FOUND));
 
         task.setTaskStatus(taskStatus);
 
@@ -73,12 +78,12 @@ public class TaskService {
 
     public TaskDTO update(long id, TaskUpdateDTO taskData) {
         var task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND.formatted(id)));
 
         if (taskData.getStatus() != null) {
             var taskStatus = taskStatusRepository.findTaskStatusBySlug(taskData.getStatus())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "TaskStatus '" + taskData.getStatus() + "' not found"));
+                            TASK_STATUS_NOT_FOUND.formatted(taskData.getStatus())));
             task.setTaskStatus(taskStatus);
         }
 
@@ -86,7 +91,7 @@ public class TaskService {
             var assigneeId = taskData.getAssigneeId();
             var user = userRepository.findById(assigneeId)
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Assignee with id " + assigneeId + " not found"));
+                            ASSIGNEE_NOT_FOUND.formatted(assigneeId)));
             task.setAssignee(user);
         }
 
@@ -102,7 +107,7 @@ public class TaskService {
 
     public void delete(long id) {
         var task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND.formatted(id)));
         taskRepository.delete(task);
     }
 
