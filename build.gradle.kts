@@ -44,7 +44,6 @@ dependencies {
 
 	// Object mapping
 	implementation(libs.mapstruct)
-	annotationProcessor(libs.mapstruct.processor)
 
 	// Lombok
 	compileOnly(libs.lombok)
@@ -53,6 +52,7 @@ dependencies {
 	annotationProcessor(libs.lombok)
 	annotationProcessor(libs.lombok.mapstruct.binding)
 	annotationProcessor(libs.spring.boot.configuration.processor)
+	annotationProcessor(libs.mapstruct.processor)
 
 
 	// Database
@@ -61,13 +61,13 @@ dependencies {
 
 
 	// Testing
-	testImplementation(libs.spring.boot.starter.test) {
-		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
-	}
 	testRuntimeOnly(libs.junit.platform.launcher)
 	testCompileOnly(libs.lombok)
 	testAnnotationProcessor(libs.lombok)
 
+	testImplementation(libs.spring.boot.starter.test) {
+		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+	}
 	testImplementation(libs.spring.webmvc)
 	testImplementation(libs.spring.boot.test.autoconfigure)
 	testImplementation(libs.spring.security.test)
