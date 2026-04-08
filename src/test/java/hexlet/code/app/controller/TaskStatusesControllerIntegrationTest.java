@@ -9,6 +9,8 @@ import hexlet.code.app.util.JWTUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -166,60 +168,18 @@ class TaskStatusesControllerIntegrationTest {
         assertThat(createdStatus.getCreatedAt()).isEqualTo(LocalDate.now());
     }
 
-    @Test
-    @DisplayName("POST /api/task_statuses - should return 400 when name is missing")
-    void createTaskStatusWhenNameMissingShouldReturnBadRequest() throws Exception {
+    @ParameterizedTest(name = "POST /api/task_statuses - should return 400 when name='' {0} '' and slug='' {1} ''")
+    @CsvSource({
+        "null, 'valid-slug'",
+        "'valid-name', null",
+        "'', 'valid-slug'",
+        "'valid-name', ''"
+    })
+    @DisplayName("POST /api/task_statuses - should return 400 when name or slug is missing/empty")
+    void createTaskStatusWhenNameOrSlugInvalidShouldReturnBadRequest(String name, String slug) throws Exception {
         TaskStatusCreateDTO createDTO = new TaskStatusCreateDTO();
-        createDTO.setName(null);
-        createDTO.setSlug("test_slug");
-
-        String requestBody = objectMapper.writeValueAsString(createDTO);
-
-        mockMvc.perform(post("/api/task_statuses")
-                        .header("Authorization", "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("POST /api/task_statuses - should return 400 when slug is missing")
-    void createTaskStatusWhenSlugMissingShouldReturnBadRequest() throws Exception {
-        TaskStatusCreateDTO createDTO = new TaskStatusCreateDTO();
-        createDTO.setName("Test Status");
-        createDTO.setSlug(null);
-
-        String requestBody = objectMapper.writeValueAsString(createDTO);
-
-        mockMvc.perform(post("/api/task_statuses")
-                        .header("Authorization", "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("POST /api/task_statuses - should return 400 when name is empty string")
-    void createTaskStatusWhenNameEmptyShouldReturnBadRequest() throws Exception {
-        TaskStatusCreateDTO createDTO = new TaskStatusCreateDTO();
-        createDTO.setName("");
-        createDTO.setSlug("test_slug");
-
-        String requestBody = objectMapper.writeValueAsString(createDTO);
-
-        mockMvc.perform(post("/api/task_statuses")
-                        .header("Authorization", "Bearer " + authToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("POST /api/task_statuses - should return 400 when slug is empty string")
-    void createTaskStatusWhenSlugEmptyShouldReturnBadRequest() throws Exception {
-        TaskStatusCreateDTO createDTO = new TaskStatusCreateDTO();
-        createDTO.setName("Test Status");
-        createDTO.setSlug("");
+        createDTO.setName("null".equals(name) ? null : name);
+        createDTO.setSlug("null".equals(slug) ? null : slug);
 
         String requestBody = objectMapper.writeValueAsString(createDTO);
 

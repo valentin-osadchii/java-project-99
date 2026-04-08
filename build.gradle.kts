@@ -48,29 +48,32 @@ dependencies {
 
 	// Lombok
 	compileOnly(libs.lombok)
+
+	// Annotaions
 	annotationProcessor(libs.lombok)
 	annotationProcessor(libs.lombok.mapstruct.binding)
+	annotationProcessor(libs.spring.boot.configuration.processor)
+
 
 	// Database
 	runtimeOnly(libs.h2)
 	runtimeOnly(libs.postgresql)
 
-	// Configuration metadata
-	annotationProcessor(libs.spring.boot.configuration.processor)
 
 	// Testing
 	testImplementation(libs.spring.boot.starter.test) {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testRuntimeOnly(libs.junit.platform.launcher)
+	testCompileOnly(libs.lombok)
+	testAnnotationProcessor(libs.lombok)
+
 	testImplementation(libs.spring.webmvc)
 	testImplementation(libs.spring.boot.test.autoconfigure)
 	testImplementation(libs.spring.security.test)
 	testImplementation(libs.json.unit.assertj)
 	testImplementation(libs.instancio)
 	testImplementation(libs.datafaker)
-	testCompileOnly(libs.lombok)
-	testAnnotationProcessor(libs.lombok)
 }
 
 configurations.all {
