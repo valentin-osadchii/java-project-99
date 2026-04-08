@@ -75,7 +75,7 @@ public class TaskTest {
 
     @Order(1)
     @Test
-    public void testCreate() throws Exception {
+    void testCreate() throws Exception {
         var name = "Task Name";
         var content = "Task Content";
         var data = new HashMap<String, Object>();
@@ -103,7 +103,7 @@ public class TaskTest {
 
     @Order(2)
     @Test
-    public void testIndex() throws Exception {
+    void testIndex() throws Exception {
         TestUtils.saveTask(mockMvc, testTask);
         var result = mockMvc.perform(get("/api/tasks").with(jwt()))
                 .andExpect(status().isOk())
@@ -115,7 +115,7 @@ public class TaskTest {
 
     @Order(3)
     @Test
-    public void testShow() throws Exception {
+    void testShow() throws Exception {
         TestUtils.saveTask(mockMvc, testTask);
         var task = TestUtils.getTaskByName(mockMvc, testTask.getName());
         var request = get("/api/tasks/{id}", task.getId()).with(jwt());
@@ -135,7 +135,7 @@ public class TaskTest {
 
     @Order(4)
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TestUtils.saveTask(mockMvc, testTask);
         var task = TestUtils.getTaskByName(mockMvc, testTask.getName());
         var data = new HashMap<String, String>();
@@ -167,7 +167,7 @@ public class TaskTest {
 
     @Order(5)
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         TestUtils.saveTask(mockMvc, testTask);
         var task = TestUtils.getTaskByName(mockMvc, testTask.getName());
 

@@ -50,7 +50,7 @@ public class TaskStatusTest {
     private TaskStatus testTaskStatus;
 
     @BeforeEach
-    public void beforeEach() throws Exception {
+    void beforeEach() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
                 .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
                 .apply(springSecurity())
@@ -62,7 +62,7 @@ public class TaskStatusTest {
 
     @Order(1)
     @Test
-    public void testCreate() throws Exception {
+    void testCreate() throws Exception {
         var data = Instancio.of(modelGenerator.getTaskStatusModel())
                 .create();
 
@@ -82,7 +82,7 @@ public class TaskStatusTest {
 
     @Order(2)
     @Test
-    public void testIndex() throws Exception {
+    void testIndex() throws Exception {
         TestUtils.saveTaskStatus(mockMvc, testTaskStatus);
 
         var result = mockMvc.perform(get("/api/task_statuses").with(jwt()))
@@ -96,7 +96,7 @@ public class TaskStatusTest {
 
     @Order(3)
     @Test
-    public void testShow() throws Exception {
+    void testShow() throws Exception {
         TestUtils.saveTaskStatus(mockMvc, testTaskStatus);
         var status = TestUtils.getStatusByName(mockMvc, testTaskStatus.getName());
 
@@ -116,7 +116,7 @@ public class TaskStatusTest {
 
     @Order(4)
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TestUtils.saveTaskStatus(mockMvc, testTaskStatus);
         var status = TestUtils.getStatusByName(mockMvc, testTaskStatus.getName());
 
@@ -144,7 +144,7 @@ public class TaskStatusTest {
 
     @Order(5)
     @Test
-    public void testPartialUpdate() throws Exception {
+    void testPartialUpdate() throws Exception {
         TestUtils.saveTaskStatus(mockMvc, testTaskStatus);
         var status = TestUtils.getStatusByName(mockMvc, testTaskStatus.getName());
 
@@ -171,7 +171,7 @@ public class TaskStatusTest {
 
     @Order(6)
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         TestUtils.saveTaskStatus(mockMvc, testTaskStatus);
         var status = TestUtils.getStatusByName(mockMvc, testTaskStatus.getName());
 

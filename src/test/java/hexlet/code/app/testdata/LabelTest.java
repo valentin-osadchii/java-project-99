@@ -34,7 +34,7 @@ import hexlet.code.app.testdata.model.Label;
 @Order(2)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class LabelTest {
+class LabelTest {
 
     @Autowired
     private WebApplicationContext wac;
@@ -51,7 +51,7 @@ public class LabelTest {
 
 
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
                 .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
                 .apply(springSecurity())
@@ -63,7 +63,7 @@ public class LabelTest {
 
     @Order(1)
     @Test
-    public void testCreate() throws Exception {
+    void testCreate() throws Exception {
         var data = Instancio.of(modelGenerator.getLabelModel())
                 .create();
 
@@ -84,7 +84,7 @@ public class LabelTest {
 
     @Order(2)
     @Test
-    public void testIndex() throws Exception {
+    void testIndex() throws Exception {
         TestUtils.saveLabel(mockMvc, testLabel);
 
         var result = mockMvc.perform(get("/api/labels").with(jwt()))
@@ -97,7 +97,7 @@ public class LabelTest {
 
     @Order(3)
     @Test
-    public void testShow() throws Exception {
+    void testShow() throws Exception {
         TestUtils.saveLabel(mockMvc, testLabel);
 
         var label = TestUtils.getLabelByName(mockMvc, testLabel.getName());
@@ -116,7 +116,7 @@ public class LabelTest {
 
     @Order(4)
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TestUtils.saveLabel(mockMvc, testLabel);
         var label = TestUtils.getLabelByName(mockMvc, testLabel.getName());
 
@@ -142,7 +142,7 @@ public class LabelTest {
 
     @Order(5)
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         TestUtils.saveLabel(mockMvc, testLabel);
         var label = TestUtils.getLabelByName(mockMvc, testLabel.getName());
 

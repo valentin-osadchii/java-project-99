@@ -97,7 +97,7 @@ public class UserTest {
 
     @Order(2)
     @Test
-    public void testIndex() throws Exception {
+    void testIndex() throws Exception {
         TestUtils.saveUser(mockMvc, testUser);
         var result = mockMvc.perform(get("/api/users").with(token))
                 .andExpect(status().isOk())
@@ -109,7 +109,7 @@ public class UserTest {
 
     @Order(3)
     @Test
-    public void testShow() throws Exception {
+    void testShow() throws Exception {
         TestUtils.saveUser(mockMvc, testUser);
         var user = TestUtils.getUserByEmail(mockMvc, testUser.getEmail());
         var request = get("/api/users/{id}", user.getId()).with(token);
@@ -130,7 +130,7 @@ public class UserTest {
 
     @Order(4)
     @Test
-    public void testUpdate() throws Exception {
+    void testUpdate() throws Exception {
         TestUtils.saveUser(mockMvc, testUser);
         var user = TestUtils.getUserByEmail(mockMvc, testUser.getEmail());
         var data = Instancio.of(modelGenerator.getUserModel())
@@ -160,7 +160,7 @@ public class UserTest {
 
     @Order(5)
     @Test
-    public void testPartialUpdate() throws Exception {
+    void testPartialUpdate() throws Exception {
         TestUtils.saveUser(mockMvc, testUser);
         var user = TestUtils.getUserByEmail(mockMvc, testUser.getEmail());
         var data = new HashMap<String, String>();
@@ -189,7 +189,7 @@ public class UserTest {
 
     @Order(6)
     @Test
-    public void testDelete() throws Exception {
+    void testDelete() throws Exception {
         TestUtils.saveUser(mockMvc, testUser);
         var user = TestUtils.getUserByEmail(mockMvc, testUser.getEmail());
         mockMvc.perform(delete("/api/users/{id}", user.getId()).with(token))
