@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
@@ -31,7 +33,7 @@ public class RsaKeyProperties {
     private RSAPrivateKey rsaPrivateKey;
 
     @PostConstruct
-    public void loadKeys() throws Exception {
+    public void loadKeys() throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         if (publicKey != null) {
             String pubKeyContent = loadKeyIfClasspath(publicKey);
             rsaPublicKey = parsePublicKey(pubKeyContent);
@@ -54,7 +56,7 @@ public class RsaKeyProperties {
         return keyRef;
     }
 
-    private RSAPublicKey parsePublicKey(String keyContent) throws Exception {
+    private RSAPublicKey parsePublicKey(String keyContent) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String publicKeyPEM = keyContent
                 .replace("-----BEGIN PUBLIC KEY-----", "")
                 .replace("-----END PUBLIC KEY-----", "")
@@ -65,7 +67,7 @@ public class RsaKeyProperties {
         return (RSAPublicKey) keyFactory.generatePublic(keySpec);
     }
 
-    private RSAPrivateKey parsePrivateKey(String keyContent) throws Exception {
+    private RSAPrivateKey parsePrivateKey(String keyContent) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String privateKeyPEM = keyContent
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")

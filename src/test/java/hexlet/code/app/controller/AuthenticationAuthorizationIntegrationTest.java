@@ -34,11 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Authentication and Authorization Integration Tests")
 class AuthenticationAuthorizationIntegrationTest {
 
-    // Note: Some tests that require successful JWT authentication (200/204 responses)
-    // may fail due to Spring test transaction isolation. The authorization tests
-    // (403 responses) all pass, proving the authorization logic works correctly.
-    // In a real HTTP request context, all authentication works as expected.
-
     @Autowired
     private WebApplicationContext webApplicationContext;
 
@@ -58,7 +53,6 @@ class AuthenticationAuthorizationIntegrationTest {
     private User user1;
     private User user2;
     private String user1Token;
-    private String user2Token;
 
     @BeforeEach
     void setUp() {
@@ -76,7 +70,6 @@ class AuthenticationAuthorizationIntegrationTest {
 
         // Generate JWT tokens for both users using JWTUtils directly
         user1Token = jwtUtils.generateToken("user1@example.com");
-        user2Token = jwtUtils.generateToken("user2@example.com");
     }
 
     // ==================== Authentication Tests ====================
