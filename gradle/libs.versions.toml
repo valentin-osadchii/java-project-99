@@ -1,26 +1,66 @@
 [versions]
+# Spring Boot & plugins
+spring-boot = "3.3.9"
+spring-dependency-management = "1.1.7"
+sonar-plugin = "7.2.3.7755"
+
+# Database
+h2 = "2.3.232"
+postgresql = "42.7.5"
+
+# Object mapping & validation
 mapstruct = "1.5.5.Final"
 lombok = "1.18.34"
 lombok-mapstruct-binding = "0.2.0"
+jackson-nullable = "0.2.8"
+
+# OpenAPI / Swagger
+springdoc = "2.6.0"
+
+# Testing
 instancio = "5.0.1"
 datafaker = "2.4.0"
-springdoc = "2.6.0"
-spring-boot = "3.3.9"
-sonar-plugin = "7.2.3.7755"
-jackson-nullable = "0.2.8"
 json-unit = "4.1.0"
-spring-dependency-management = "1.1.7"
+spring-security-test = "6.4.4"
 
 [libraries]
+# Spring Boot starters
+spring-boot-starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
+spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+spring-boot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
+spring-boot-starter-validation = { group = "org.springframework.boot", name = "spring-boot-starter-validation" }
+spring-boot-starter-security = { group = "org.springframework.boot", name = "spring-boot-starter-security" }
+spring-boot-starter-oauth2-resource-server = { group = "org.springframework.boot", name = "spring-boot-starter-oauth2-resource-server" }
+spring-boot-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor" }
+spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+
+# Spring Framework
+spring-webmvc = { group = "org.springframework", name = "spring-webmvc" }
+spring-security-test = { group = "org.springframework.security", name = "spring-security-test", version.ref = "spring-security-test" }
+
+# Database
+h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+
+# Object mapping & validation
 mapstruct = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 lombok-mapstruct-binding = { group = "org.projectlombok", name = "lombok-mapstruct-binding", version.ref = "lombok-mapstruct-binding" }
+jackson-databind-nullable = { group = "org.openapitools", name = "jackson-databind-nullable", version.ref = "jackson-nullable" }
+
+# OpenAPI / Swagger
+springdoc-openapi = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+
+# Testing
+spring-boot-test-autoconfigure = { group = "org.springframework.boot", name = "spring-boot-test-autoconfigure" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 instancio = { group = "org.instancio", name = "instancio-junit", version.ref = "instancio" }
 datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
-springdoc = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
-jackson-databind-nullable = { group = "org.openapitools", name = "jackson-databind-nullable", version.ref = "jackson-nullable" }
 json-unit-assertj = { group = "net.javacrumbs.json-unit", name = "json-unit-assertj", version.ref = "json-unit" }
 
+# Plugins
 [plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonar-plugin" }
