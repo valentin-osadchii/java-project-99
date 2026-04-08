@@ -34,7 +34,7 @@ import java.util.HashMap;
 @Order(3)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class TaskStatusTest {
+class TaskStatusTest {
 
     @Autowired
     private WebApplicationContext wac;

@@ -41,7 +41,7 @@ import hexlet.code.app.testdata.util.ModelGenerator;
 @Order(1)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class UserTest {
+class UserTest {
 
     @Autowired
     private WebApplicationContext wac;
@@ -59,7 +59,7 @@ public class UserTest {
     private SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor token;
 
     @BeforeEach
-    public void beforeEach() throws Exception {
+    void beforeEach() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac)
                 .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
                 .apply(springSecurity())
