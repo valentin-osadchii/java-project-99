@@ -1,7 +1,6 @@
 package hexlet.code.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,12 +19,6 @@ public class TaskDTO {
     private String content;
     private String status;
 
-    @JsonProperty("label_ids")
-    private List<Long> labelIds;
-
     @JsonProperty("taskLabelIds")
-    @JsonIgnore(false)
-    public List<Long> getTaskLabelIds() {
-        return labelIds;
-    }
+    private List<Long> labelIds;
 }
