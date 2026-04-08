@@ -56,6 +56,11 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
 	testImplementation("org.springframework.security:spring-security-test")
 
+	// CI test-data dependencies
+	testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.0")
+	testImplementation("org.instancio:instancio-junit:5.0.1")
+	testImplementation("net.datafaker:datafaker:2.4.0")
+
 
 	//lombok
 	compileOnly("org.projectlombok:lombok:$lombokVersion")
