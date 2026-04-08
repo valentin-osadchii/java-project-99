@@ -1,6 +1,7 @@
 [versions]
 mapstruct = "1.5.5.Final"
 lombok = "1.18.34"
+lombok-mapstruct-binding = "0.2.0"
 instancio = "5.0.1"
 datafaker = "2.4.0"
 springdoc = "2.6.0"
@@ -14,6 +15,7 @@ spring-dependency-management = "1.1.7"
 mapstruct = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+lombok-mapstruct-binding = { group = "org.projectlombok", name = "lombok-mapstruct-binding", version.ref = "lombok-mapstruct-binding" }
 instancio = { group = "org.instancio", name = "instancio-junit", version.ref = "instancio" }
 datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
 springdoc = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }

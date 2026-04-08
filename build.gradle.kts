@@ -50,6 +50,7 @@ dependencies {
 	// Lombok
 	compileOnly(libs.lombok)
 	annotationProcessor(libs.lombok)
+	annotationProcessor(libs.lombok.mapstruct.binding)
 
 	// Databases
 	runtimeOnly("com.h2database:h2")
