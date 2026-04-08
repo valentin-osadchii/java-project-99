@@ -1,7 +1,6 @@
 package hexlet.code;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 public class AppApplication extends hexlet.code.app.AppApplication {
 
