@@ -241,8 +241,8 @@ class TaskControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.title", is("Task with labels")))
-                .andExpect(jsonPath("$.label_ids", notNullValue()))
-                .andExpect(jsonPath("$.label_ids", hasSize(2)))
+                .andExpect(jsonPath("$.taskLabelIds", notNullValue()))
+                .andExpect(jsonPath("$.taskLabelIds", hasSize(2)))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
@@ -267,8 +267,8 @@ class TaskControllerIntegrationTest {
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.label_ids", notNullValue()))
-                .andExpect(jsonPath("$.label_ids", hasSize(0)));
+                .andExpect(jsonPath("$.taskLabelIds", notNullValue()))
+                .andExpect(jsonPath("$.taskLabelIds", hasSize(0)));
     }
 
     @Test
@@ -293,8 +293,8 @@ class TaskControllerIntegrationTest {
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.label_ids", hasSize(1)))
-                .andExpect(jsonPath("$.label_ids[0]", is(featureLabel.getId().intValue())));
+                .andExpect(jsonPath("$.taskLabelIds", hasSize(1)))
+                .andExpect(jsonPath("$.taskLabelIds[0]", is(featureLabel.getId().intValue())));
 
         Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
         assertThat(updatedTask.getLabels()).hasSize(1);
@@ -322,7 +322,7 @@ class TaskControllerIntegrationTest {
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.label_ids", hasSize(0)));
+                .andExpect(jsonPath("$.taskLabelIds", hasSize(0)));
 
         Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
         assertThat(updatedTask.getLabels()).isEmpty();
