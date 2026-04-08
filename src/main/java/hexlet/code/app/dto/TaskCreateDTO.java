@@ -28,4 +28,10 @@ public class TaskCreateDTO {
 
     @JsonProperty("label_ids")
     private List<Long> labelIds;
+
+    // Accept "taskLabelIds" as alias from CI tests
+    @JsonProperty("taskLabelIds")
+    public void setTaskLabelIds(List<Long> ids) {
+        this.labelIds = ids;
+    }
 }
