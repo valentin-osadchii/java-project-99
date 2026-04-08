@@ -18,7 +18,7 @@ version = "0.0.1-SNAPSHOT"
 val lombokVersion = "1.18.34"
 
 application {
-	mainClass = "hexlet.code.app.AppApplication"
+	mainClass = "hexlet.code.AppApplication"
 }
 
 
