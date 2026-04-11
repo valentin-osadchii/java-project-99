@@ -44,3 +44,5 @@ out/
 QWEN.md
 /src/main/resources/certs/private.pem
 /logs/
+/.gigaide/
+/.qwen/
