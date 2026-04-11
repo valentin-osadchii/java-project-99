@@ -1,8 +1,11 @@
 package hexlet.code.app.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.UserCreateDTO;
+import hexlet.code.app.dto.UserDTO;
 import hexlet.code.app.dto.UserUpdateDTO;
+import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.model.User;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.util.JWTUtils;
@@ -20,10 +23,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,6 +45,9 @@ class UsersControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private UserRepository userRepository;
@@ -91,29 +97,39 @@ class UsersControllerIntegrationTest {
     void getAllUsersWhenUsersExistShouldReturnUserList() throws Exception {
         createUserAndSave("jane@example.com", "Jane", "Smith", "password456");
 
-        mockMvc.perform(get("/api/users")
+        var response = mockMvc.perform(get("/api/users")
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].email", is("john@example.com")))
-                .andExpect(jsonPath("$[0].firstName", is("John")))
-                .andExpect(jsonPath("$[0].lastName", is("Doe")))
-                .andExpect(jsonPath("$[0].createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        List<UserDTO> actualDTOs = objectMapper.readValue(body, new TypeReference<>() {
+        });
+
+        var expected = userRepository.findAll().stream().map(userMapper::map).toList();
+
+        assertThat(actualDTOs)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+                .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("GET /api/users/{id} - should return user by id")
     void getUserByIdWhenUserExistsShouldReturnUser() throws Exception {
-        mockMvc.perform(get("/api/users/" + savedUser.getId())
+        var response = mockMvc.perform(get("/api/users/" + savedUser.getId())
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(savedUser.getId().intValue())))
-                .andExpect(jsonPath("$.email", is("john@example.com")))
-                .andExpect(jsonPath("$.firstName", is("John")))
-                .andExpect(jsonPath("$.lastName", is("Doe")))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(savedUser.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -137,18 +153,21 @@ class UsersControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
-        mockMvc.perform(post("/api/users")
+        var response = mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.email", is("new@example.com")))
-                .andExpect(jsonPath("$.firstName", is("New")))
-                .andExpect(jsonPath("$.lastName", is("User")))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        assertThat(userRepository.findByEmail("new@example.com")).isPresent();
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findByEmail("new@example.com").get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -177,17 +196,22 @@ class UsersControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/users/" + savedUser.getId())
+        var response = mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is("updated@example.com")))
-                .andExpect(jsonPath("$.firstName", is("John")))
-                .andExpect(jsonPath("$.lastName", is("Doe")));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        User updatedUser = userRepository.findById(savedUser.getId()).get();
-        assertThat(updatedUser.getEmail()).isEqualTo("updated@example.com");
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(savedUser.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -220,14 +244,22 @@ class UsersControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/users/" + savedUser.getId())
+        var response = mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is("newemail@example.com")))
-                .andExpect(jsonPath("$.firstName", is("Updated")))
-                .andExpect(jsonPath("$.lastName", is("Name")));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(savedUser.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -238,14 +270,22 @@ class UsersControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/users/" + savedUser.getId())
+        var response = mockMvc.perform(put("/api/users/" + savedUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is("changed@example.com")))
-                .andExpect(jsonPath("$.firstName", is("John")))
-                .andExpect(jsonPath("$.lastName", is("Doe")));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(savedUser.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
