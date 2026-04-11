@@ -3,6 +3,7 @@ package hexlet.code.app.testdata.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,8 +16,10 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Task {
 
+    @EqualsAndHashCode.Include
     private Long id;
     @JsonProperty("taskLabelIds")
     private Set<Long> labels;
