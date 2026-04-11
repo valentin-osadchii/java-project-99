@@ -35,4 +35,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Cannot delete entity because it is referenced by other entities");
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneralExceptions(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("{\"error\": \"Internal server error\"}");
+    }
 }
