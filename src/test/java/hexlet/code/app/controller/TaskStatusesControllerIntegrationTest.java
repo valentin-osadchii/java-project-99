@@ -1,8 +1,11 @@
 package hexlet.code.app.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.TaskStatusCreateDTO;
+import hexlet.code.app.dto.TaskStatusDTO;
 import hexlet.code.app.dto.TaskStatusUpdateDTO;
+import hexlet.code.app.mapper.TaskStatusMapper;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.util.JWTUtils;
@@ -21,10 +24,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,6 +49,9 @@ class TaskStatusesControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private TaskStatusMapper taskStatusMapper;
 
     @Autowired
     private TaskStatusRepository taskStatusRepository;
@@ -93,27 +99,39 @@ class TaskStatusesControllerIntegrationTest {
         createStatusAndSave("ToReview", "to-review-" + System.currentTimeMillis());
         createStatusAndSave("Done", "done-" + System.currentTimeMillis());
 
-        mockMvc.perform(get("/api/task_statuses")
+        var response = mockMvc.perform(get("/api/task_statuses")
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].name", is("Test Draft")))
-                .andExpect(jsonPath("$[0].slug", is(savedStatus.getSlug())))
-                .andExpect(jsonPath("$[0].createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        List<TaskStatusDTO> actualDTOs = objectMapper.readValue(body, new TypeReference<>() {
+        });
+
+        var expected = taskStatusRepository.findAll().stream().map(taskStatusMapper::map).toList();
+
+        assertThat(actualDTOs)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+                .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("GET /api/task_statuses/{id} - should return task status by id")
     void getTaskStatusByIdWhenStatusExistsShouldReturnStatus() throws Exception {
-        mockMvc.perform(get("/api/task_statuses/" + savedStatus.getId())
+        var response = mockMvc.perform(get("/api/task_statuses/" + savedStatus.getId())
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(savedStatus.getId().intValue())))
-                .andExpect(jsonPath("$.name", is("Test Draft")))
-                .andExpect(jsonPath("$.slug", is(savedStatus.getSlug())))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        TaskStatusDTO actualDTO = objectMapper.readValue(body, TaskStatusDTO.class);
+        TaskStatus expected = taskStatusRepository.findById(savedStatus.getId()).get();
+        TaskStatusDTO expectedDTO = taskStatusMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -135,18 +153,22 @@ class TaskStatusesControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
-        mockMvc.perform(post("/api/task_statuses")
+        var response = mockMvc.perform(post("/api/task_statuses")
                         .header("Authorization", "Bearer " + authToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.name", is("In Progress")))
-                .andExpect(jsonPath("$.slug", is("in_progress")))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        assertThat(taskStatusRepository.findAll()).hasSize(2);
+        TaskStatusDTO actualDTO = objectMapper.readValue(body, TaskStatusDTO.class);
+        TaskStatus expected = taskStatusRepository.findTaskStatusBySlug("in_progress").get();
+        TaskStatusDTO expectedDTO = taskStatusMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -212,16 +234,22 @@ class TaskStatusesControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/task_statuses/" + savedStatus.getId())
+        var response = mockMvc.perform(put("/api/task_statuses/" + savedStatus.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("Updated Draft")))
-                .andExpect(jsonPath("$.slug", is(savedStatus.getSlug())));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        TaskStatus updatedStatus = taskStatusRepository.findById(savedStatus.getId()).get();
-        assertThat(updatedStatus.getName()).isEqualTo("Updated Draft");
+        TaskStatusDTO actualDTO = objectMapper.readValue(body, TaskStatusDTO.class);
+        TaskStatus expected = taskStatusRepository.findById(savedStatus.getId()).get();
+        TaskStatusDTO expectedDTO = taskStatusMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -232,14 +260,22 @@ class TaskStatusesControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/task_statuses/" + savedStatus.getId())
+        var response = mockMvc.perform(put("/api/task_statuses/" + savedStatus.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("New Name")))
-                .andExpect(jsonPath("$.slug", is(savedStatus.getSlug())))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        TaskStatusDTO actualDTO = objectMapper.readValue(body, TaskStatusDTO.class);
+        TaskStatus expected = taskStatusRepository.findById(savedStatus.getId()).get();
+        TaskStatusDTO expectedDTO = taskStatusMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
