@@ -3,7 +3,9 @@ package hexlet.code.app.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.AuthRequest;
 import hexlet.code.app.dto.UserCreateDTO;
+import hexlet.code.app.dto.UserDTO;
 import hexlet.code.app.dto.UserUpdateDTO;
+import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.model.User;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.util.JWTUtils;
@@ -20,13 +22,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -38,6 +39,9 @@ class AuthenticationAuthorizationIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private UserRepository userRepository;
@@ -145,16 +149,22 @@ class AuthenticationAuthorizationIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        String result = mockMvc.perform(put("/api/users/" + freshUser1.getId())
+        var response = mockMvc.perform(put("/api/users/" + freshUser1.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + user1Token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName", is("Updated")))
-                .andReturn().getResponse().getContentAsString();
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        // Verify the response contains the updated data
-        assertThat(result).contains("Updated");
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(freshUser1.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -277,10 +287,20 @@ class AuthenticationAuthorizationIntegrationTest {
     @Test
     @DisplayName("GET /api/users/{id} - should return user with valid token")
     void getUserWithValidTokenShouldSucceed() throws Exception {
-        mockMvc.perform(get("/api/users/" + user1.getId())
+        var response = mockMvc.perform(get("/api/users/" + user1.getId())
                         .header("Authorization", "Bearer " + user1Token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", is("user1@example.com")));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findById(user1.getId()).get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -294,11 +314,21 @@ class AuthenticationAuthorizationIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
-        mockMvc.perform(post("/api/users")
+        var response = mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email", is("newuser@example.com")));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        UserDTO actualDTO = objectMapper.readValue(body, UserDTO.class);
+        User expected = userRepository.findByEmail("newuser@example.com").get();
+        UserDTO expectedDTO = userMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
