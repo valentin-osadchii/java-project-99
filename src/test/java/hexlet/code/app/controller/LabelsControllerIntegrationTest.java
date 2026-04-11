@@ -1,8 +1,11 @@
 package hexlet.code.app.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.app.dto.LabelCreateDTO;
+import hexlet.code.app.dto.LabelDTO;
 import hexlet.code.app.dto.LabelUpdateDTO;
+import hexlet.code.app.mapper.LabelMapper;
 import hexlet.code.app.model.Label;
 import hexlet.code.app.repository.LabelRepository;
 import hexlet.code.app.util.JWTUtils;
@@ -18,10 +21,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +46,9 @@ class LabelsControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private LabelMapper labelMapper;
 
     @Autowired
     private LabelRepository labelRepository;
@@ -86,25 +92,39 @@ class LabelsControllerIntegrationTest {
     void getAllLabelsWhenLabelsExistShouldReturnLabelsList() throws Exception {
         createLabelAndSave("another-label");
 
-        mockMvc.perform(get("/api/labels")
+        var response = mockMvc.perform(get("/api/labels")
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].name", is(savedLabel.getName())))
-                .andExpect(jsonPath("$[0].createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        List<LabelDTO> actualDTOs = objectMapper.readValue(body, new TypeReference<>() {
+        });
+
+        var expected = labelRepository.findAll().stream().map(labelMapper::map).toList();
+
+        assertThat(actualDTOs)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("createdAt")
+                .containsExactlyInAnyOrderElementsOf(expected);
     }
 
     @Test
     @DisplayName("GET /api/labels/{id} - should return label by id")
     void getLabelByIdWhenLabelExistsShouldReturnLabel() throws Exception {
-        mockMvc.perform(get("/api/labels/" + savedLabel.getId())
+        var response = mockMvc.perform(get("/api/labels/" + savedLabel.getId())
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", is(savedLabel.getId().intValue())))
-                .andExpect(jsonPath("$.name", is(savedLabel.getName())))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
+
+        LabelDTO actualDTO = objectMapper.readValue(body, LabelDTO.class);
+        Label expected = labelRepository.findById(savedLabel.getId()).get();
+        LabelDTO expectedDTO = labelMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -125,17 +145,22 @@ class LabelsControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(createDTO);
 
-        mockMvc.perform(post("/api/labels")
+        var response = mockMvc.perform(post("/api/labels")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.name", is("documentation")))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        assertThat(labelRepository.findAll()).hasSize(2);
+        LabelDTO actualDTO = objectMapper.readValue(body, LabelDTO.class);
+        Label expected = labelRepository.findByName("documentation").get();
+        LabelDTO expectedDTO = labelMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
@@ -208,16 +233,22 @@ class LabelsControllerIntegrationTest {
 
         String requestBody = objectMapper.writeValueAsString(updateDTO);
 
-        mockMvc.perform(put("/api/labels/" + savedLabel.getId())
+        var response = mockMvc.perform(put("/api/labels/" + savedLabel.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("updated-label")))
-                .andExpect(jsonPath("$.createdAt", notNullValue()));
+                .andReturn().getResponse();
+        var body = response.getContentAsString();
 
-        Label updatedLabel = labelRepository.findById(savedLabel.getId()).get();
-        assertThat(updatedLabel.getName()).isEqualTo("updated-label");
+        LabelDTO actualDTO = objectMapper.readValue(body, LabelDTO.class);
+        Label expected = labelRepository.findById(savedLabel.getId()).get();
+        LabelDTO expectedDTO = labelMapper.map(expected);
+
+        assertThat(actualDTO)
+                .usingRecursiveComparison()
+                .ignoringFields("createdAt")
+                .isEqualTo(expectedDTO);
     }
 
     @Test
