@@ -7,7 +7,6 @@ import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,7 +47,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.map(user);
     }
 
-    @PreAuthorize("@userService.isOwner(#id)")
     public UserDTO update(long id, UserUpdateDTO userData) {
         var user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
@@ -63,7 +61,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.map(user);
     }
 
-    @PreAuthorize("@userService.isOwner(#id)")
     public void delete(long id) {
         var user = userRepository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + "not found"));

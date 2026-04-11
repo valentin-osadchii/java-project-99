@@ -7,6 +7,7 @@ import hexlet.code.app.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +51,7 @@ public class UsersController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@userService.isOwner(#id)")
     @ResponseStatus(HttpStatus.OK)
     public UserDTO update(@PathVariable Long id,
                              @Valid @RequestBody UserUpdateDTO dto) {
@@ -58,6 +60,7 @@ public class UsersController {
 
 
     @DeleteMapping(path = "/{id}")
+    @PreAuthorize("@userService.isOwner(#id)")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
         userService.delete(id);
