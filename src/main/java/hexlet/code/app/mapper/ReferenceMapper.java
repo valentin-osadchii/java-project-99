@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.TargetType;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.PersistenceContext;
 
 @Mapper(
         componentModel = MappingConstants.ComponentModel.SPRING
@@ -16,7 +16,7 @@ public abstract class ReferenceMapper {
 
     protected EntityManager entityManager;
 
-    @Autowired
+    @PersistenceContext
     public void setEntityManager(EntityManager entityManager) {
         this.entityManager = entityManager;
     }

@@ -36,6 +36,7 @@ dependencies {
 	implementation(libs.spring.boot.starter.validation)
 	implementation(libs.spring.boot.starter.security)
 	implementation(libs.spring.boot.starter.oauth2.resource.server)
+	implementation(libs.jakarta.persistence.api)
 
 	// OpenAPI / Swagger
 	implementation(libs.springdoc.openapi)
