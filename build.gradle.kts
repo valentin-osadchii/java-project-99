@@ -2,7 +2,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-	java
 	alias(libs.plugins.spring.boot)
 	alias(libs.plugins.spring.dependency.management)
 	id("checkstyle")
