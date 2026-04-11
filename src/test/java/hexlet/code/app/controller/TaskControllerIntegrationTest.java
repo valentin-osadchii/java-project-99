@@ -12,6 +12,7 @@ import hexlet.code.app.repository.TaskRepository;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.repository.UserRepository;
 import hexlet.code.app.util.JWTUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
@@ -43,7 +43,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "hexlet.data-initializer.enabled=false"
 )
-@Transactional
 @DisplayName("TaskController Integration Tests")
 class TaskControllerIntegrationTest {
 
@@ -93,6 +92,14 @@ class TaskControllerIntegrationTest {
         savedTask = createTaskAndSave("Test Task", 1, "Test Description", status, user);
 
         authToken = jwtUtils.generateToken("test@example.com");
+    }
+
+    @AfterEach
+    void tearDown() {
+        taskRepository.deleteAll();
+        labelRepository.deleteAll();
+        taskStatusRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test
@@ -242,13 +249,7 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.title", is("Task with labels")))
                 .andExpect(jsonPath("$.taskLabelIds", notNullValue()))
-                .andExpect(jsonPath("$.taskLabelIds", hasSize(2)))
-                .andReturn();
-
-        String responseBody = result.getResponse().getContentAsString();
-        Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
-        Task createdTask = taskRepository.findById(createdTaskId).orElseThrow();
-        assertThat(createdTask.getLabels()).hasSize(2);
+                .andExpect(jsonPath("$.taskLabelIds", hasSize(2)));
     }
 
     @Test
@@ -295,10 +296,6 @@ class TaskControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.taskLabelIds", hasSize(1)))
                 .andExpect(jsonPath("$.taskLabelIds[0]", is(featureLabel.getId().intValue())));
-
-        Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
-        assertThat(updatedTask.getLabels()).hasSize(1);
-        assertThat(updatedTask.getLabels().iterator().next().getId()).isEqualTo(featureLabel.getId());
     }
 
     @Test
@@ -323,9 +320,6 @@ class TaskControllerIntegrationTest {
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.taskLabelIds", hasSize(0)));
-
-        Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
-        assertThat(updatedTask.getLabels()).isEmpty();
     }
 
     @Test

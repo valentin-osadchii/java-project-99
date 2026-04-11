@@ -6,6 +6,7 @@ import hexlet.code.app.dto.TaskStatusUpdateDTO;
 import hexlet.code.app.model.TaskStatus;
 import hexlet.code.app.repository.TaskStatusRepository;
 import hexlet.code.app.util.JWTUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
@@ -38,7 +38,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "hexlet.data-initializer.enabled=false"
 )
-@Transactional
 @DisplayName("TaskStatusesController Integration Tests")
 class TaskStatusesControllerIntegrationTest {
 
@@ -69,6 +68,11 @@ class TaskStatusesControllerIntegrationTest {
         taskStatusRepository.deleteAll();
         savedStatus = createStatusAndSave("Test Draft", "test-draft-" + System.currentTimeMillis());
         authToken = jwtUtils.generateToken("test@example.com");
+    }
+
+    @AfterEach
+    void tearDown() {
+        taskStatusRepository.deleteAll();
     }
 
     @Test
