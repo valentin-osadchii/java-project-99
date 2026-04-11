@@ -46,3 +46,4 @@ QWEN.md
 /logs/
 /.gigaide/
 /.qwen/
+/node_modules/
