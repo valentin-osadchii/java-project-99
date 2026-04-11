@@ -6,7 +6,6 @@ import hexlet.code.app.dto.UserUpdateDTO;
 import hexlet.code.app.exception.ResourceNotFoundException;
 import hexlet.code.app.mapper.UserMapper;
 import hexlet.code.app.repository.UserRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -64,13 +63,7 @@ public class UserServiceImpl implements UserService {
     public void delete(long id) {
         var user = userRepository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + "not found"));
-        try {
-            userRepository.delete(user);
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException(
-                    "Cannot delete user because they are assigned to one or more tasks");
-        }
-
+        userRepository.delete(user);
     }
 
     public boolean isOwner(Long userId) {
