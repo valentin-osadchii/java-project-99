@@ -347,12 +347,14 @@ class TaskStatusesControllerIntegrationTest {
     void getAllTaskStatusesShouldReturnTotalCountHeader() throws Exception {
         createStatusAndSave("ToReview", "to-review-" + System.currentTimeMillis());
 
+        long expectedCount = taskStatusRepository.count();
+
         mockMvc.perform(get("/api/task_statuses")
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(result -> {
                     String totalCount = result.getResponse().getHeader("X-Total-Count");
-                    assertThat(totalCount).isEqualTo("2");
+                    assertThat(totalCount).isEqualTo(String.valueOf(expectedCount));
                 });
     }
 
