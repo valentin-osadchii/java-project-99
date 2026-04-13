@@ -15,6 +15,7 @@ public class TaskCreateDTO {
     @Min(value = 0, message = "Index cannot be negative")
     private Integer index;
 
+    @JsonProperty("assignee_id")
     private Long assigneeId;
 
     @Size(min = 1)
@@ -29,7 +30,6 @@ public class TaskCreateDTO {
     @JsonProperty("label_ids")
     private List<Long> labelIds;
 
-    // Accept "taskLabelIds" as alias from CI tests
     @JsonProperty("taskLabelIds")
     public void setTaskLabelIds(List<Long> ids) {
         this.labelIds = ids;

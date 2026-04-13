@@ -15,6 +15,7 @@ public class TaskUpdateDTO {
     @Min(value = 0, message = "Index cannot be negative")
     private Integer index;
 
+    @JsonProperty("assignee_id")
     private Long assigneeId;
 
     @Size(min = 1)
@@ -26,4 +27,22 @@ public class TaskUpdateDTO {
 
     @JsonProperty("label_ids")
     private List<Long> labelIds;
+
+    /**
+     * Tracks whether assignee_id was present in the JSON request.
+     * - present with value  → set assignee
+     * - present with null   → clear assignee
+     * - not present         → leave unchanged
+     */
+    private transient boolean assigneeIdSet = false;
+
+    @JsonProperty("assignee_id")
+    public void setAssigneeId(Long id) {
+        this.assigneeId = id;
+        this.assigneeIdSet = true;
+    }
+
+    public boolean isAssigneeIdSet() {
+        return assigneeIdSet;
+    }
 }

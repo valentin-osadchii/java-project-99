@@ -210,6 +210,12 @@ class TaskControllerIntegrationTest {
         String responseBody = result.getResponse().getContentAsString();
         Long createdTaskId = objectMapper.readTree(responseBody).get("id").asLong();
         assertThat(taskRepository.findById(createdTaskId)).isPresent();
+
+        // BUG-FIX TEST: Verify assignee_id is correctly returned when fetching the created task
+        mockMvc.perform(get("/api/tasks/" + createdTaskId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id", is(assignee.getId().intValue())));
     }
 
     @Test
@@ -471,7 +477,7 @@ class TaskControllerIntegrationTest {
 
         String requestBody = """
                 {
-                  "assigneeId": %d
+                  "assignee_id": %d
                 }
                 """.formatted(newAssignee.getId());
 
@@ -484,6 +490,45 @@ class TaskControllerIntegrationTest {
 
         Task updatedTask = taskRepository.findById(savedTask.getId()).get();
         assertThat(updatedTask.getAssignee().getId()).isEqualTo(newAssignee.getId());
+
+        // BUG-FIX TEST: Verify assignee_id is correctly returned when fetching the updated task
+        mockMvc.perform(get("/api/tasks/" + savedTask.getId())
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id", is(newAssignee.getId().intValue())));
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should update only assignee and preserve other fields")
+    void updateTaskOnlyAssigneeShouldPreserveOtherFields() throws Exception {
+        User newAssignee = createUserAndSave("onlyassignee@example.com", "Only", "Assignee", "password123");
+
+        String originalTitle = savedTask.getName();
+        String originalContent = savedTask.getDescription();
+        Integer originalIndex = savedTask.getIndex();
+
+        String requestBody = """
+                {
+                  "assignee_id": %d
+                }
+                """.formatted(newAssignee.getId());
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id", is(newAssignee.getId().intValue())))
+                .andExpect(jsonPath("$.title", is(originalTitle)))
+                .andExpect(jsonPath("$.content", is(originalContent)))
+                .andExpect(jsonPath("$.index", is(originalIndex)));
+
+        // BUG-FIX TEST: Verify the update actually persisted by fetching separately
+        mockMvc.perform(get("/api/tasks/" + savedTask.getId())
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id", is(newAssignee.getId().intValue())))
+                .andExpect(jsonPath("$.title", is(originalTitle)));
     }
 
     @Test
@@ -498,7 +543,7 @@ class TaskControllerIntegrationTest {
                   "content": "New content here",
                   "index": 10,
                   "status": "done",
-                  "assigneeId": %d
+                  "assignee_id": %d
                 }
                 """.formatted(newAssignee.getId());
 
@@ -573,7 +618,7 @@ class TaskControllerIntegrationTest {
     void updateTaskWithNonExistentAssigneeShouldReturn404() throws Exception {
         String requestBody = """
                 {
-                  "assigneeId": 999
+                  "assignee_id": 999
                 }
                 """;
 
@@ -582,6 +627,33 @@ class TaskControllerIntegrationTest {
                         .content(requestBody)
                         .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PUT /api/tasks/{id} - should clear assignee when assignee_id is null")
+    void updateTaskWithNullAssigneeShouldClearAssignee() throws Exception {
+        String requestBody = """
+                {
+                  "assignee_id": null
+                }
+                """;
+
+        mockMvc.perform(put("/api/tasks/" + savedTask.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id").doesNotExist());
+
+        // Verify assignee was actually cleared in DB
+        Task updatedTask = taskRepository.findById(savedTask.getId()).get();
+        assertThat(updatedTask.getAssignee()).isNull();
+
+        // Verify it persists when fetching again
+        mockMvc.perform(get("/api/tasks/" + savedTask.getId())
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assignee_id").doesNotExist());
     }
 
     @Test

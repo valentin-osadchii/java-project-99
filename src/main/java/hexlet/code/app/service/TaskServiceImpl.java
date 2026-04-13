@@ -98,12 +98,17 @@ public class TaskServiceImpl implements TaskService {
             task.setTaskStatus(taskStatus);
         }
 
-        if (taskData.getAssigneeId() != null) {
-            var assigneeId = taskData.getAssigneeId();
-            var user = userRepository.findById(assigneeId)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            ASSIGNEE_NOT_FOUND.formatted(assigneeId)));
-            task.setAssignee(user);
+        // Handle assignee: only update if the field was present in the request
+        if (taskData.isAssigneeIdSet()) {
+            if (taskData.getAssigneeId() != null) {
+                var user = userRepository.findById(taskData.getAssigneeId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                ASSIGNEE_NOT_FOUND.formatted(taskData.getAssigneeId())));
+                task.setAssignee(user);
+            } else {
+                // Explicitly set to null → clear the assignee
+                task.setAssignee(null);
+            }
         }
 
         if (taskData.getLabelIds() != null) {
