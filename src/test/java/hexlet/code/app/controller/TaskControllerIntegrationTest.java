@@ -169,6 +169,7 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.title", is("New Task")))
                 .andExpect(jsonPath("$.content", is("Task description")))
                 .andExpect(jsonPath("$.index", is(1)))
+                .andExpect(jsonPath("$.assignee_id", is(assignee.getId().intValue())))
                 .andExpect(jsonPath("$.status", is("test-status")))
                 .andExpect(jsonPath("$.createdAt", notNullValue()))
                 .andReturn();
@@ -201,6 +202,7 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.title", is("Complete Feature")))
                 .andExpect(jsonPath("$.content", is("Implement the new feature")))
                 .andExpect(jsonPath("$.index", is(5)))
+                .andExpect(jsonPath("$.assignee_id", is(assignee.getId().intValue())))
                 .andExpect(jsonPath("$.status", is("test-status")))
                 .andExpect(jsonPath("$.createdAt", notNullValue()))
                 .andReturn();

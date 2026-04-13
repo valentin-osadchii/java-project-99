@@ -74,6 +74,14 @@ public class TaskServiceImpl implements TaskService {
             task.setLabels(labels);
         }
 
+        if (taskData.getAssigneeId() != null) {
+            var assigneeId = taskData.getAssigneeId();
+            var user = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            ASSIGNEE_NOT_FOUND.formatted(assigneeId)));
+            task.setAssignee(user);
+        }
+
         taskRepository.save(task);
         return taskMapper.map(task);
     }
